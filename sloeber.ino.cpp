@@ -2,12 +2,13 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2020-01-06 15:04:44
+//This file has been generated on 2020-01-07 22:26:24
 
 #include "Arduino.h"
-#include "Artnet_modified.h"
+#include "ArtnetWifi.h"
 #include "dmx_decoder.h"
 #include "effect_generator.h"
+#include "dmx_encoder.h"
 #include "Arduino.h"
 #include <stdint.h>
 #include <freertos/FreeRTOS.h>
@@ -33,8 +34,9 @@
 
 void setup() ;
 void loop() ;
-void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data, IPAddress remoteIP) ;
+void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data) ;
 void onSync(IPAddress remoteIP) ;
+void sendDMXValues();
 void initTest() ;
 void initTestBlue() ;
 uint16_t getDmxAddress();

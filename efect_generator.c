@@ -2012,3 +2012,53 @@ void calculate_color_snow_rainbow(uint8_t* address, uint16_t i, uint8_t brightne
     	write_color(address, val_value, val_value, val_value);
     }
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//																											//
+//												get functions												//
+//																											//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t efg_get_current_motion(){
+	return current_motion;
+}
+uint8_t efg_get_segment_width(){
+	return segment_width;
+}
+uint8_t efg_get_segment_dist(){
+	return segment_dist;
+}
+uint16_t efg_get_update_interval(){
+	return update_interval;
+}
+uint8_t efg_get_blur_width(){
+	return m_blurr_width;
+}
+uint8_t efg_get_stars_sporn_rate(){
+	return stars_sporn_rate;
+}
+uint8_t efg_get_snow_sporn_rate(){
+	return snow_sporn_rate;
+}
+uint8_t efg_get_current_color_mode(){
+	return current_color_mode;
+}
+uint8_t efg_get_r_value(){
+	return r_value;
+}
+uint8_t efg_get_g_value(){
+	return g_value;
+}
+uint8_t efg_get_b_value(){
+	return b_value;
+}
+uint8_t efg_get_val_value(){
+	return val_value;
+}
+uint16_t efg_get_c_update_interval(){
+	return c_update_interval;
+}
+uint8_t efg_get_c_segment_width(){
+	return c_segment_width;
+}

@@ -4,10 +4,10 @@ Adafruit's NeoPixel library: https://github.com/adafruit/Adafruit_NeoPixel
 This example may be copied under the terms of the MIT license, see the LICENSE file for details
 */
 
-//#include <Artnet.h>
-#include "Artnet_modified.h"
+#include "ArtnetWifi.h"
 #include "dmx_decoder.h"
 #include "effect_generator.h"
+#include "dmx_encoder.h"
 
 
 #include "Arduino.h"
@@ -45,12 +45,13 @@ uint16_t getDmxUniverse();
 uint8_t getStripMode();
 uint16_t getEffectMode();
 void updateEffectMode();
+void sendDMXValues();			// Function used to send the current settings in standalone mode via ArtNet
 
 void initWifi();
 void initTest();
 
 #define ADDR_SWITCH		0b10000000
-#define UNIVERSE_SWITCH	0b01000000
+#define UNIVERSE_SWITCH	0b01110011
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //																											//
@@ -76,18 +77,19 @@ void initTest();
 //			ADDR_1 - ADDR_9: DMX address																	//
 //			UNI_1 - UNI_6: ArtNet Universe																	//
 //		Stand-alone mode:																					//
+//			UNI_6:	0: Local only; 1: Master																//
 //			ADDR_1 - ADDR_3: Red color																		//
 //			ADDR_4 - ADDR_6: Green color																	//
 //			ADDR_7 - ADDR_9: Blue color																		//
-//			UNI_1 - UNI_6: Effect																			//
-//				000000: Steady color																		//
-//				1000xx:	Blurr forward																		//
-//				0100xx:	Blurr forward backward																//
-//				1100xx:	Tear forward 																		//
-//				0010xx:	Tear forward backward																//
-//				1010xx:	Fade all																			//
-//				0110xx:	Stars																				//
-//				0001xx: Random effects																		//
+//			UNI_1 - UNI_5: Effect																			//
+//				00000: Steady color																			//
+//				100xx:	Blurr forward																		//
+//				010xx:	Blurr forward backward																//
+//				110xx:	Tear forward 																		//
+//				001xx:	Tear forward backward																//
+//				101xx:	Fade all																			//
+//				011xx:	Stars																				//
+//				111xx: Random effects																		//
 //																											//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -100,9 +102,12 @@ const char* password = "BeautyOfLight";
 #define HOST_NAME		"Light Tube 1"
 
 uint8_t wifi_initialized = 0;
+uint8_t wifi_ap = 0;
 
 // Artnet settings
-Artnet_modified artnet;
+ArtnetWifi artnet;
+const int startUniverse = 1; // some software send out artnet first universe as 0.
+const char host[] = "192.168.4.255"; // CHANGE FOR YOUR SETUP your destination
 
 byte broadcast[] = {192, 168, 178, 255};
 void setup()
@@ -113,7 +118,7 @@ void setup()
 
   Serial.begin(115200);
 
-  if(!(getEffectMode()>>15)){
+  if(!(getEffectMode()>>15) || (getEffectMode()>>14) == 0x03){
 	  initWifi();
   }
 
@@ -125,7 +130,7 @@ void setup()
 void loop()
 {
 	//init Wifi if swithing to ArtNet mode
-	if(!(getEffectMode() >> 15) && !wifi_initialized){
+	if((!(getEffectMode() >> 15 || (getEffectMode()>>14) == 0x03)) && !wifi_initialized){
 		initWifi();
 	}
 	updateEffectMode();
@@ -133,6 +138,14 @@ void loop()
   if(!(getEffectMode()>>15)){
 	  // we call the read function inside the loop
 	  artnet.read();
+  }
+  else if((getEffectMode()>>14) == 0x03){
+	  static unsigned long lastArtNetUpdateTime = 0;
+	  unsigned long time = millis();
+	  if(time - lastArtNetUpdateTime >  DMX_UPDATE_INTERVAL){
+		  lastArtNetUpdateTime = time;
+		  sendDMXValues();
+	  }
   }
   else{
 	  uint8_t effect = getEffectMode() >> 9;
@@ -148,14 +161,14 @@ void loop()
   }
 }
 
-void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data, IPAddress remoteIP)
+//void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data, IPAddress remoteIP)
+void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
 {
   static bool bufferFlushed = false;
   static int lastUniverseRead = 0xFFFF;
   static unsigned long lastUpdateTime = 0;
   if(millis()-lastUpdateTime < DMX_UPDATE_INTERVAL){
     artnet.flushBuffer();
-    Serial.println("Flushed");
     return;
   }
   if(!bufferFlushed){
@@ -183,15 +196,23 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
 	  dmxValues[j] = data[i];
   }
 
-  for(uint8_t i = 0; i < NDMXVALUES; i++){
-	  Serial.print(String(dmxValues[i]) + ", ");
-  }
-  Serial.println();
-
+//  for(uint8_t i = 0; i < NDMXVALUES; i++){
+//	  Serial.print(String(dmxValues[i]) + ", ");
+//  }
+//  Serial.println();
+//
   dmx_decode(dmxValues, getStripMode());
 }
 
 void onSync(IPAddress remoteIP) {
+}
+
+void sendDMXValues(){
+	dmx_encode();
+	for(uint8_t i = 0; i < NDMXVALUES; i++){
+		artnet.setByte(i, dmx_encode_get_data(i));
+	}
+	artnet.write();
 }
 
 void initTest()
@@ -289,7 +310,7 @@ void updateEffectMode(){
 	static uint32_t lastEffectMode = 0x00000000;
 
 	uint8_t effect = getEffectMode() >> 9;
-	effect = effect & 0b00111111;
+	effect = effect & 0b00011111;
 
 	if(getEffectMode() != lastEffectMode){
 		lastEffectMode = getEffectMode();
@@ -309,8 +330,8 @@ void updateEffectMode(){
 			efg_set_steady();
 		}
 		//Blurr forward
-		else if((effect&0x0F) == 0b0001){
-			switch(effect>>4){
+		else if((effect&0x07) == 0b001){
+			switch(effect>>3){
 			case 0:
 				efg_set_blurr(m_chase_blurr_f, 1, 20, 100, 2);
 				break;
@@ -327,9 +348,9 @@ void updateEffectMode(){
 
 		}
 		//Blurr forward backward
-		else if((effect&0x0F) == 0b0010){
+		else if((effect&0x07) == 0b010){
 
-			switch(effect>>4){
+			switch(effect>>3){
 			case 0:
 				efg_set_blurr(m_chase_blurr_fb, 1, 20, 100, 2);
 				break;
@@ -345,9 +366,9 @@ void updateEffectMode(){
 			}
 		}
 		//Tear forward
-		else if((effect&0x0F) == 0b0011){
+		else if((effect&0x07) == 0b011){
 
-			switch(effect>>4){
+			switch(effect>>3){
 			case 0:
 				efg_set_blurr(m_tear_f, 1, 20, 100, 2);
 				break;
@@ -363,9 +384,9 @@ void updateEffectMode(){
 			}
 		}
 		//Tear forward backward
-		else if((effect&0x0F) == 0b0100){
+		else if((effect&0x07) == 0b100){
 
-			switch(effect>>4){
+			switch(effect>>3){
 			case 0:
 				efg_set_blurr(m_tear_fb, 1, 20, 100, 3);
 				break;
@@ -381,10 +402,10 @@ void updateEffectMode(){
 			}
 		}
 		//Fade all
-		else if((effect&0x0F) == 0b0101){
+		else if((effect&0x07) == 0b101){
 			efg_set_steady();
 
-			switch(effect>>4){
+			switch(effect>>3){
 			case 0:
 				efg_color_set_fade_switch(c_fade_all, 100, 255);
 				break;
@@ -400,8 +421,8 @@ void updateEffectMode(){
 			}
 		}
 		//Stars
-		else if((effect&0x0F) == 0b0110){
-			switch(effect>>4){
+		else if((effect&0x07) == 0b110){
+			switch(effect>>3){
 			case 0:
 				efg_set_stars(10, 50);
 				break;
@@ -418,18 +439,18 @@ void updateEffectMode(){
 			}
 		}
 		//Random effects
-		else if((effect&0x0F) == 0b1000){
+		else if((effect&0x07) == 0b111){
 			nextEffectUpdateTime = 0;
 		}
 		efg_normalize_values();
 	}
 	//Random effects
-	if((effect&0x0F) == 0b1000 && millis() >= nextEffectUpdateTime){
+	if((effect&0x07) == 0b111 && millis() >= nextEffectUpdateTime){
 		static uint8_t effect_step = 0;
 		if(nextEffectUpdateTime == 0){
 			effect_step = 0;
 		}
-		switch(effect>>4){
+		switch(effect>>3){
 		case 0:
 			switch(effect_step){
 			case 0:
@@ -570,26 +591,42 @@ void updateEffectMode(){
 }
 
 void initWifi(){
-  WiFi.begin(ssid, password);
-  WiFi.setHostname(HOST_NAME);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(250);
-    Serial.print(".");
+  if(!(getEffectMode()>>15)){
+	  WiFi.begin(ssid, password);
+	  WiFi.setHostname(HOST_NAME);
+	  while (WiFi.status() != WL_CONNECTED) {
+		delay(250);
+		Serial.print(".");
+	  }
+	  Serial.println("");
+	  Serial.print("Connected to ");
+	  Serial.println(ssid);
+	  Serial.print("IP address: ");
+	  Serial.println(WiFi.localIP());
+
+	  artnet.begin();
+
+	  // this will be called for each packet received
+	  artnet.setArtDmxCallback(onDmxFrame);
+	  wifi_initialized = 1;
+	  wifi_ap = 0;
+	  initTestBlue();
   }
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  else{
+	  WiFi.softAP(ssid, password);
+	  IPAddress IP = WiFi.softAPIP();
+	  Serial.print("AP IP address: ");
+	  Serial.println(IP);
 
-  artnet.begin();
-  artnet.setBroadcast(broadcast);
+	  artnet.begin(host);
+	  artnet.setLength(NDMXVALUES);
+	  artnet.setUniverse(startUniverse);
 
-  // this will be called for each packet received
-  artnet.setArtDmxCallback(onDmxFrame);
-  artnet.setArtSyncCallback(onSync);
-  wifi_initialized = 1;
-  initTestBlue();
+	  wifi_initialized = 1;
+	  wifi_ap = 1;
+	  initTestBlue();
+	  initTestBlue();
+  }
 }
 
 #define ETS_RMT_CTRL_INUM	18

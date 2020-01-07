@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 #define WS2812
-#define	NUMBER_LEDS			144
+#define	NUMBER_LEDS			30
 #define STRIP_LENGTH		1		//strip length in m
 #define SPEED_FACTOR		(NUMBER_LEDS*5/150./STRIP_LENGTH)
 
@@ -193,6 +193,21 @@ void efg_color_set_snow_rainbow(uint8_t val, uint8_t segment_width);
 uint8_t efg_get_red();
 uint8_t efg_get_green();
 uint8_t efg_get_blue();
+
+uint8_t efg_get_current_motion();
+uint8_t efg_get_segment_width();
+uint8_t efg_get_segment_dist();
+uint16_t efg_get_update_interval();
+uint8_t efg_get_blur_width();
+uint8_t efg_get_stars_sporn_rate();
+uint8_t efg_get_snow_sporn_rate();
+uint8_t efg_get_current_color_mode();
+uint8_t efg_get_r_value();
+uint8_t efg_get_g_value();
+uint8_t efg_get_b_value();
+uint8_t efg_get_val_value();
+uint16_t efg_get_c_update_interval();
+uint8_t efg_get_c_segment_width();
 
 #ifdef __cplusplus
 } // extern "C"

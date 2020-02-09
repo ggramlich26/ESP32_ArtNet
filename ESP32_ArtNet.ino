@@ -10,7 +10,6 @@
 #include "dmx_encoder.h"
 #include "config.h"
 #include "ws2812.h"
-#include "webserver.h"
 
 
 #include "Arduino.h"
@@ -656,7 +655,6 @@ void initWifi(){
 		initTestBlue();
 		initTestBlue();
 	}
-	webserver_init();
 }
 
 String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword){

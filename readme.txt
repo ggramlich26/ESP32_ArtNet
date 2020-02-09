@@ -7,9 +7,6 @@ variable can be used to set the effect running. It is also possible to run the
 ESP as an access point so that other devices running the same software can be
 synchronized to it.
 
-It is also possible to change the WIFI credentials by connecting to the
-webserver running on the ESP on port 80 using any browser.
-
 Please configure config.h to your needs. It lets you specify the number of
 LEDs on your strip, the strip length (this is necessary to have devices with
 different LED densities running the effects with the same speed), the default

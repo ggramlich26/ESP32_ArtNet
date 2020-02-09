@@ -9,9 +9,11 @@
 #include "dmx_encoder.h"
 #include "config.h"
 #include "ws2812.h"
+#include "webserver.h"
 
 
 #include "Arduino.h"
+#include "EEPROM.h"
 #include <stdint.h>
 
 #define	DMX_MODE			ws2812
@@ -20,6 +22,7 @@
 #define DMX_UPDATE_INTERVAL 100
 
 
+void initSwitches();
 uint16_t getDmxAddress();
 uint16_t getDmxUniverse();
 uint8_t getStripMode();
@@ -70,6 +73,7 @@ void initTest();
 //				101xx:	Fade all																			//
 //				011xx:	Stars																				//
 //				111xx: Random effects																		//
+//		All switches 0: Reset wifi configuration to default SSID and password								//
 //																											//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,8 +81,12 @@ void initTest();
 //DMX Definitions
 #define NDMXVALUES  9      //Number of DMX Values to be recieved starting from the startaddress
 
-const char* ssid     = DEFAULT_SSID;
-const char* password = DEFAULT_WIFI_PW;
+#define SSID_MAX_LEN		30
+#define SSID_ADDR			0
+#define WIFI_PW_MAX_LEN		30
+#define WIFI_PW_ADDR		31
+char ssid[SSID_MAX_LEN+1];
+char password[WIFI_PW_MAX_LEN+1];
 
 uint8_t wifi_initialized = 0;
 uint8_t wifi_ap = 0;
@@ -92,9 +100,43 @@ void setup()
 {
 //  nvs_flash_init();
   ws2812_init(ws2812_pin);
-  pinMode(2, OUTPUT);
 
   Serial.begin(115200);
+
+  initSwitches();
+
+  uint8_t ssid_initialized = 0;
+  //read SSID and password from flash
+  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
+	  ssid[i] = EEPROM.read(SSID_ADDR+i);
+	  if(ssid[i] != 0x00){
+		  ssid_initialized = 0xFF;
+	  }
+  }
+  for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
+	  ssid[i] = EEPROM.read(WIFI_PW_ADDR+i);
+  }
+
+  if(getEffectMode() == 0x0000 || !ssid_initialized){
+	  //copy default SSID to EEPROM and to the ssid variable
+	  const char* default_ssid = DEFAULT_SSID;
+	  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
+		  EEPROM.write(SSID_ADDR + i, default_ssid[i]);
+		  ssid[i] = default_ssid[i];
+		  if(default_ssid[i] == '\0'){
+			  break;
+		  }
+	  }
+	  //copy default password to EEPROM and to the password variable
+	  const char* default_pw = DEFAULT_WIFI_PW;
+	  for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
+		  EEPROM.write(WIFI_PW_ADDR + i, default_pw[i]);
+		  password[i] = default_pw[i];
+		  if(default_pw[i] == '\0'){
+			  break;
+		  }
+	  }
+  }
 
   if(!(getEffectMode()>>15) || (getEffectMode()>>14) == 0x03){
 	  initWifi();
@@ -240,6 +282,11 @@ void initTestBlue()
 	}
 	ws2812_setColors(NUMBER_LEDS, &(data[0]));
 	delay(300);
+}
+
+//Sets the switch pins to input and enables the internal pullup resistors
+void initSwitches(){
+	//Todo: implement
 }
 
 //returns DMX Address. This is the value from the address DIP switches in inversed order
@@ -588,5 +635,6 @@ void initWifi(){
 	  initTestBlue();
 	  initTestBlue();
   }
+  webserver_init();
 }
 

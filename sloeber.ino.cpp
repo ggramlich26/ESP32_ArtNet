@@ -2,7 +2,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2020-02-09 13:13:46
+//This file has been generated on 2020-02-09 16:26:23
 
 #include "Arduino.h"
 #include "ArtnetWifi.h"
@@ -11,7 +11,9 @@
 #include "dmx_encoder.h"
 #include "config.h"
 #include "ws2812.h"
+#include "webserver.h"
 #include "Arduino.h"
+#include "EEPROM.h"
 #include <stdint.h>
 
 void setup() ;
@@ -21,6 +23,7 @@ void onSync(IPAddress remoteIP) ;
 void sendDMXValues();
 void initTest() ;
 void initTestBlue() ;
+void initSwitches();
 uint16_t getDmxAddress();
 uint8_t getStripMode();
 uint16_t getDmxUniverse();

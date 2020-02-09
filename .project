@@ -42,6 +42,16 @@
 			<locationURI>WORKSPACE_LOC/arduino-esp32/variants/nodemcu-32s</locationURI>
 		</link>
 		<link>
+			<name>libraries/EEPROM</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/EEPROM</locationURI>
+		</link>
+		<link>
+			<name>libraries/FS</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/FS</locationURI>
+		</link>
+		<link>
 			<name>libraries/WiFi</name>
 			<type>2</type>
 			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/WiFi</locationURI>

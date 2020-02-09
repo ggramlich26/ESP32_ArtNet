@@ -40,6 +40,10 @@ void ArtnetWifi::begin(String hostname)
   physical = 0;
 }
 
+void ArtnetWifi::end(){
+  Udp.stop();
+}
+
 uint16_t ArtnetWifi::read(void)
 {
   packetSize = Udp.parsePacket();

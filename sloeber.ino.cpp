@@ -2,7 +2,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2020-02-09 16:26:23
+//This file has been generated on 2020-02-09 21:54:05
 
 #include "Arduino.h"
 #include "ArtnetWifi.h"
@@ -31,6 +31,8 @@ uint8_t invert_bitorder(uint8_t b);
 uint16_t getEffectMode();
 void updateEffectMode();
 void initWifi();
+String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword);
+uint32_t calculateWIFIChecksum();
 
 #include "ESP32_ArtNet.ino"
 

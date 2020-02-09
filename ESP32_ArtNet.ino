@@ -3,6 +3,7 @@
  * of creating a WIFI access point over which other devices running the same code can be synchronized.
 */
 
+#undef MBEDTLS_CONFIG_FILE
 #include "ArtnetWifi.h"
 #include "dmx_decoder.h"
 #include "effect_generator.h"
@@ -32,6 +33,7 @@ void sendDMXValues();			// Function used to send the current settings in stand a
 
 void initWifi();
 void initTest();
+uint32_t calculateWIFIChecksum();
 
 #define ADDR_SWITCH		0b10000000
 #define UNIVERSE_SWITCH	0b01110011
@@ -85,11 +87,14 @@ void initTest();
 #define SSID_ADDR			0
 #define WIFI_PW_MAX_LEN		30
 #define WIFI_PW_ADDR		31
+#define CHECKSUM_ADDR		62
+#define	CHECKSUM_LEN		4
 char ssid[SSID_MAX_LEN+1];
 char password[WIFI_PW_MAX_LEN+1];
 
 uint8_t wifi_initialized = 0;
 uint8_t wifi_ap = 0;
+uint8_t schedule_restart = 0;
 
 // Artnet settings
 ArtnetWifi artnet;
@@ -100,6 +105,7 @@ void setup()
 {
 //  nvs_flash_init();
   ws2812_init(ws2812_pin);
+  EEPROM.begin(SSID_MAX_LEN+1+WIFI_PW_MAX_LEN+1+CHECKSUM_LEN);
 
   Serial.begin(115200);
 
@@ -114,10 +120,14 @@ void setup()
 	  }
   }
   for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
-	  ssid[i] = EEPROM.read(WIFI_PW_ADDR+i);
+	  password[i] = EEPROM.read(WIFI_PW_ADDR+i);
+  }
+  uint32_t checksum = 0;
+  for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
+	  checksum |= ((uint32_t)EEPROM.read(CHECKSUM_ADDR+i))<<(8*i);
   }
 
-  if(getEffectMode() == 0x0000 || !ssid_initialized){
+  if(getEffectMode() == 0x0000 || checksum != calculateWIFIChecksum()){
 	  //copy default SSID to EEPROM and to the ssid variable
 	  const char* default_ssid = DEFAULT_SSID;
 	  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
@@ -136,6 +146,11 @@ void setup()
 			  break;
 		  }
 	  }
+	  checksum = calculateWIFIChecksum();
+	  for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
+		  EEPROM.write(CHECKSUM_ADDR+i, (uint8_t)(checksum>>(8*i)));
+	  }
+	  EEPROM.commit();
   }
 
   if(!(getEffectMode()>>15) || (getEffectMode()>>14) == 0x03){
@@ -175,6 +190,12 @@ void loop()
 	  efg_update();
 	  lastLedUpdateTime = time;
 	  ws2812_setColors(NUMBER_LEDS, efg_get_data());
+  }
+
+  if(schedule_restart){
+	 schedule_restart = 0;
+	 delay(1000);
+	 ESP.restart();
   }
 }
 
@@ -638,3 +659,51 @@ void initWifi(){
   webserver_init();
 }
 
+String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword){
+	if(currentPassword == NULL || strcmp(currentPassword, password) != 0){
+		return "Setting WIFI credentials failed. Wrong password.";
+	}
+	if(newSSID != NULL && strcmp(newSSID, "") != 0){
+	  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
+		  EEPROM.write(SSID_ADDR + i, newSSID[i]);
+		  ssid[i] = newSSID[i];
+		  if(newSSID[i] == '\0'){
+			  break;
+		  }
+	  }
+	}
+	if(newPassword != NULL && strcmp(newPassword, "") != 0){
+	  for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
+		  EEPROM.write(WIFI_PW_ADDR + i, newPassword[i]);
+		  password[i] = newPassword[i];
+		  if(newPassword[i] == '\0'){
+			  break;
+		  }
+	  }
+	}
+	  uint32_t checksum = calculateWIFIChecksum();
+	  for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
+		  EEPROM.write(CHECKSUM_ADDR+i, (uint8_t)(checksum>>(8*i)));
+	  }
+	EEPROM.commit();
+	schedule_restart = 0xFF;
+	return "Successfully set new WIFI credentials. You can reset the wifi credentials to their default values by setting "
+			"all address and universe switches to 0 and restarting the device.";
+}
+
+uint32_t calculateWIFIChecksum(){
+	uint32_t res = 0;
+	for(uint8_t i = 0, j = 0; i < SSID_MAX_LEN+1; i++, j = (j+1)%CHECKSUM_LEN){
+		res ^= ((uint32_t)(ssid[i])<<(8*j));
+		if(ssid[i] == '\0'){
+			break;
+		}
+	}
+	for(uint8_t i = 0, j = 0; i < WIFI_PW_MAX_LEN+1; i++, j = (j+1)%CHECKSUM_LEN){
+		res ^= ((uint32_t)(password[i])<<(8*j));
+		if(password[i] == '\0'){
+			break;
+		}
+	}
+	return res;
+}

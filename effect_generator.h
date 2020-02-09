@@ -9,14 +9,13 @@
 #define EFFECT_GENERATOR_H_
 
 #include "stdint.h"
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define WS2812
-#define	NUMBER_LEDS			30
-#define STRIP_LENGTH		1		//strip length in m
 #define SPEED_FACTOR		(NUMBER_LEDS*5/150./STRIP_LENGTH)
 
 void efg_update();

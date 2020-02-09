@@ -1,51 +1,31 @@
 /*
-This example will receive multiple universes via Artnet and control a strip of ws2811 leds via
-Adafruit's NeoPixel library: https://github.com/adafruit/Adafruit_NeoPixel
-This example may be copied under the terms of the MIT license, see the LICENSE file for details
+ * This sketch will control WS2812 or WS2811 LED strips either via ArtNet or in stand alone mode. It is also capable
+ * of creating a WIFI access point over which other devices running the same code can be synchronized.
 */
 
 #include "ArtnetWifi.h"
 #include "dmx_decoder.h"
 #include "effect_generator.h"
 #include "dmx_encoder.h"
+#include "config.h"
+#include "ws2812.h"
 
 
 #include "Arduino.h"
 #include <stdint.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#include <soc/rmt_struct.h>
-#include <soc/dport_reg.h>
-#include <driver/gpio.h>
-#include <soc/gpio_sig_map.h>
-#include <esp_intr.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <driver/rmt.h>
-#include "ws2812.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <soc/rmt_struct.h>
-#include <esp_system.h>
-#include <nvs_flash.h>
-#include <driver/gpio.h>
-#include <stdio.h>
-#include "ws2812.h"
 
 #define	DMX_MODE			ws2812
 
 #define LED_UPDATE_INTERVAL 50
 #define DMX_UPDATE_INTERVAL 100
 
-#define ws2812_pin 	23    // Number of the data out pin
 
 uint16_t getDmxAddress();
 uint16_t getDmxUniverse();
 uint8_t getStripMode();
 uint16_t getEffectMode();
 void updateEffectMode();
-void sendDMXValues();			// Function used to send the current settings in standalone mode via ArtNet
+void sendDMXValues();			// Function used to send the current settings in stand alone mode via ArtNet
 
 void initWifi();
 void initTest();
@@ -97,19 +77,17 @@ void initTest();
 //DMX Definitions
 #define NDMXVALUES  9      //Number of DMX Values to be recieved starting from the startaddress
 
-const char* ssid     = "Zeus Lighting";
-const char* password = "BeautyOfLight";
-#define HOST_NAME		"Light Tube 1"
+const char* ssid     = DEFAULT_SSID;
+const char* password = DEFAULT_WIFI_PW;
 
 uint8_t wifi_initialized = 0;
 uint8_t wifi_ap = 0;
 
 // Artnet settings
 ArtnetWifi artnet;
-const int startUniverse = 1; // some software send out artnet first universe as 0.
-const char host[] = "192.168.4.255"; // CHANGE FOR YOUR SETUP your destination
+const int startUniverse = 1; 			// some software send out artnet first universe as 0.
+const char host[] = "192.168.4.255";	// breadcast address in WIFI access point mode
 
-byte broadcast[] = {192, 168, 178, 255};
 void setup()
 {
 //  nvs_flash_init();
@@ -135,11 +113,10 @@ void loop()
 	}
 	updateEffectMode();
 
-  if(!(getEffectMode()>>15)){
-	  // we call the read function inside the loop
+  if(!(getEffectMode()>>15)){	//ArtNet mode
 	  artnet.read();
   }
-  else if((getEffectMode()>>14) == 0x03){
+  else if((getEffectMode()>>14) == 0x03){	//standalone mode with access point
 	  static unsigned long lastArtNetUpdateTime = 0;
 	  unsigned long time = millis();
 	  if(time - lastArtNetUpdateTime >  DMX_UPDATE_INTERVAL){
@@ -147,10 +124,8 @@ void loop()
 		  sendDMXValues();
 	  }
   }
-  else{
-	  uint8_t effect = getEffectMode() >> 9;
-  }
 
+  //update effect and LEDs
   static unsigned long lastLedUpdateTime = millis();
   unsigned long time = millis();
   if(time - lastLedUpdateTime >= LED_UPDATE_INTERVAL){
@@ -165,7 +140,6 @@ void loop()
 void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
 {
   static bool bufferFlushed = false;
-  static int lastUniverseRead = 0xFFFF;
   static unsigned long lastUpdateTime = 0;
   if(millis()-lastUpdateTime < DMX_UPDATE_INTERVAL){
     artnet.flushBuffer();
@@ -176,12 +150,6 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
     bufferFlushed = true;
     return;
   }
-//  if((int)universe == lastUniverseRead){
-//    lastUniverseRead = 0xFFFF;
-//    bufferFlushed = false;
-//    lastUpdateTime = millis();
-//    return;
-//  }
   if(universe == getDmxUniverse()){
     bufferFlushed = false;
     lastUpdateTime = millis();
@@ -189,18 +157,11 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   else{
 	  return;
   }
-  lastUniverseRead = universe;
   //read dmx values
   uint8_t dmxValues[NDMXVALUES];
   for(int i = getDmxAddress()-1, j=0; j < NDMXVALUES; i++, j++){
 	  dmxValues[j] = data[i];
   }
-
-//  for(uint8_t i = 0; i < NDMXVALUES; i++){
-//	  Serial.print(String(dmxValues[i]) + ", ");
-//  }
-//  Serial.println();
-//
   dmx_decode(dmxValues, getStripMode());
 }
 
@@ -629,207 +590,3 @@ void initWifi(){
   }
 }
 
-#define ETS_RMT_CTRL_INUM	18
-#define ESP_RMT_CTRL_DISABLE	ESP_RMT_CTRL_DIABLE /* Typo in esp_intr.h */
-
-#define DIVIDER		4 /* Above 4, timings start to deviate*/
-#define DURATION	12.5 /* minimum time of a single RMT duration
-				in nanoseconds based on clock */
-
-#define PULSE_T0H	(  350 / (DURATION * DIVIDER));
-#define PULSE_T1H	(  900 / (DURATION * DIVIDER));
-#define PULSE_T0L	(  900 / (DURATION * DIVIDER));
-#define PULSE_T1L	(  350 / (DURATION * DIVIDER));
-#define PULSE_TRS	(50000 / (DURATION * DIVIDER));
-
-#define MAX_PULSES	32
-
-#define RMTCHANNEL	0
-
-typedef union {
-  struct {
-    uint32_t duration0:15;
-    uint32_t level0:1;
-    uint32_t duration1:15;
-    uint32_t level1:1;
-  };
-  uint32_t val;
-} rmtPulsePair;
-
-static uint8_t *ws2812_buffer = NULL;
-static unsigned int ws2812_pos, ws2812_len, ws2812_half;
-static xSemaphoreHandle ws2812_sem = NULL;
-static intr_handle_t rmt_intr_handle = NULL;
-static rmtPulsePair ws2812_bits[2];
-
-void ws2812_initRMTChannel(int rmtChannel)
-{
-  RMT.apb_conf.fifo_mask = 1;  //enable memory access, instead of FIFO mode.
-  RMT.apb_conf.mem_tx_wrap_en = 1; //wrap around when hitting end of buffer
-  RMT.conf_ch[rmtChannel].conf0.div_cnt = DIVIDER;
-  RMT.conf_ch[rmtChannel].conf0.mem_size = 1;
-  RMT.conf_ch[rmtChannel].conf0.carrier_en = 0;
-  RMT.conf_ch[rmtChannel].conf0.carrier_out_lv = 1;
-  RMT.conf_ch[rmtChannel].conf0.mem_pd = 0;
-
-  RMT.conf_ch[rmtChannel].conf1.rx_en = 0;
-  RMT.conf_ch[rmtChannel].conf1.mem_owner = 0;
-  RMT.conf_ch[rmtChannel].conf1.tx_conti_mode = 0;    //loop back mode.
-  RMT.conf_ch[rmtChannel].conf1.ref_always_on = 1;    // use apb clock: 80M
-  RMT.conf_ch[rmtChannel].conf1.idle_out_en = 1;
-  RMT.conf_ch[rmtChannel].conf1.idle_out_lv = 0;
-
-  return;
-}
-
-void ws2812_copy()
-{
-  unsigned int i, j, offset, len, bit;
-
-
-  offset = ws2812_half * MAX_PULSES;
-  ws2812_half = !ws2812_half;
-
-  len = ws2812_len - ws2812_pos;
-  if (len > (MAX_PULSES / 8))
-    len = (MAX_PULSES / 8);
-
-  if (!len) {
-    for (i = 0; i < MAX_PULSES; i++)
-      RMTMEM.chan[RMTCHANNEL].data32[i + offset].val = 0;
-    return;
-  }
-
-  for (i = 0; i < len; i++) {
-    bit = ws2812_buffer[i + ws2812_pos];
-    for (j = 0; j < 8; j++, bit <<= 1) {
-      RMTMEM.chan[RMTCHANNEL].data32[j + i * 8 + offset].val =
-	ws2812_bits[(bit >> 7) & 0x01].val;
-    }
-    if (i + ws2812_pos == ws2812_len - 1)
-      RMTMEM.chan[RMTCHANNEL].data32[7 + i * 8 + offset].duration1 = PULSE_TRS;
-  }
-
-  for (i *= 8; i < MAX_PULSES; i++)
-    RMTMEM.chan[RMTCHANNEL].data32[i + offset].val = 0;
-
-  ws2812_pos += len;
-  return;
-}
-
-void ws2812_handleInterrupt(void *arg)
-{
-  portBASE_TYPE taskAwoken = 0;
-
-
-  if (RMT.int_st.ch0_tx_thr_event) {
-    ws2812_copy();
-    RMT.int_clr.ch0_tx_thr_event = 1;
-  }
-  else if (RMT.int_st.ch0_tx_end && ws2812_sem) {
-    xSemaphoreGiveFromISR(ws2812_sem, &taskAwoken);
-    RMT.int_clr.ch0_tx_end = 1;
-  }
-
-  return;
-}
-
-void ws2812_init(int gpioNum)
-{
-  DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_RMT_CLK_EN);
-  DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_RMT_RST);
-
-  rmt_set_pin((rmt_channel_t)RMTCHANNEL, RMT_MODE_TX, (gpio_num_t)gpioNum);
-
-  ws2812_initRMTChannel(RMTCHANNEL);
-
-  RMT.tx_lim_ch[RMTCHANNEL].limit = MAX_PULSES;
-  RMT.int_ena.ch0_tx_thr_event = 1;
-  RMT.int_ena.ch0_tx_end = 1;
-
-  ws2812_bits[0].level0 = 1;
-  ws2812_bits[0].level1 = 0;
-  ws2812_bits[0].duration0 = PULSE_T0H;
-  ws2812_bits[0].duration1 = PULSE_T0L;
-  ws2812_bits[1].level0 = 1;
-  ws2812_bits[1].level1 = 0;
-  ws2812_bits[1].duration0 = PULSE_T1H;
-  ws2812_bits[1].duration1 = PULSE_T1L;
-
-  esp_intr_alloc(ETS_RMT_INTR_SOURCE, 0, ws2812_handleInterrupt, NULL, &rmt_intr_handle);
-
-  return;
-}
-
-//void ws2812_setColors(unsigned int length, rgbVal *array)
-//{
-//  unsigned int i;
-//
-//
-//  ws2812_len = (length * 3) * sizeof(uint8_t);
-//  ws2812_buffer = (uint8_t*)(malloc(ws2812_len));
-//
-//  for (i = 0; i < length; i++) {
-//    ws2812_buffer[0 + i * 3] = array[i].g;
-//    ws2812_buffer[1 + i * 3] = array[i].r;
-//    ws2812_buffer[2 + i * 3] = array[i].b;
-//  }
-//
-//  ws2812_pos = 0;
-//  ws2812_half = 0;
-//
-//  ws2812_copy();
-//
-//  if (ws2812_pos < ws2812_len)
-//    ws2812_copy();
-//
-//  ws2812_sem = xSemaphoreCreateBinary();
-//
-//  RMT.conf_ch[RMTCHANNEL].conf1.mem_rd_rst = 1;
-//  RMT.conf_ch[RMTCHANNEL].conf1.tx_start = 1;
-//
-//  xSemaphoreTake(ws2812_sem, portMAX_DELAY);
-//  vSemaphoreDelete(ws2812_sem);
-//  ws2812_sem = NULL;
-//
-//  free(ws2812_buffer);
-//
-//  return;
-//}
-
-void ws2812_setColors(unsigned int length, uint8_t *array)
-{
-  unsigned int i;
-
-
-  ws2812_len = (length * 3) * sizeof(uint8_t);
-//  ws2812_buffer = (uint8_t*)(malloc(ws2812_len));
-//
-//  for (i = 0; i < length; i++) {
-//    ws2812_buffer[0 + i * 3] = array[i].g;
-//    ws2812_buffer[1 + i * 3] = array[i].r;
-//    ws2812_buffer[2 + i * 3] = array[i].b;
-//  }
-  ws2812_buffer=array;
-
-  ws2812_pos = 0;
-  ws2812_half = 0;
-
-  ws2812_copy();
-
-  if (ws2812_pos < ws2812_len)
-    ws2812_copy();
-
-  ws2812_sem = xSemaphoreCreateBinary();
-
-  RMT.conf_ch[RMTCHANNEL].conf1.mem_rd_rst = 1;
-  RMT.conf_ch[RMTCHANNEL].conf1.tx_start = 1;
-
-  xSemaphoreTake(ws2812_sem, portMAX_DELAY);
-  vSemaphoreDelete(ws2812_sem);
-  ws2812_sem = NULL;
-
-//  free(ws2812_buffer);
-
-  return;
-}

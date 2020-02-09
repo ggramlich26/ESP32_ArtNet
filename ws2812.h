@@ -4,6 +4,8 @@
  * This is a driver for the WS2812 RGB LEDs using the RMT peripheral on the ESP32.
  *
  * This code is placed in the public domain (or CC0 licensed, at your option).
+ *
+ * Adapted by ggramlich26 09. Feb 2020
  */
 
 #ifndef WS2812_DRIVER_H
@@ -11,25 +13,15 @@
 
 #include <stdint.h>
 
-typedef union {
-  struct __attribute__ ((packed)) {
-    uint8_t r, g, b;
-  };
-  uint32_t num;
-} rgbVal;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern void ws2812_init(int gpioNum);
 extern void ws2812_setColors(unsigned int length, uint8_t *array);
 
-inline rgbVal makeRGBVal(uint8_t r, uint8_t g, uint8_t b)
-{
-  rgbVal v;
-
-
-  v.r = r;
-  v.g = g;
-  v.b = b;
-  return v;
-}
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* WS2812_DRIVER_H */

@@ -1,7 +1,7 @@
 /*
  * This sketch will control WS2812 or WS2811 LED strips either via ArtNet or in stand alone mode. It is also capable
  * of creating a WIFI access point over which other devices running the same code can be synchronized.
-*/
+ */
 
 #undef MBEDTLS_CONFIG_FILE
 #include "ArtnetWifi.h"
@@ -103,61 +103,61 @@ const char host[] = "192.168.4.255";	// breadcast address in WIFI access point m
 
 void setup()
 {
-//  nvs_flash_init();
-  ws2812_init(ws2812_pin);
-  EEPROM.begin(SSID_MAX_LEN+1+WIFI_PW_MAX_LEN+1+CHECKSUM_LEN);
+	//  nvs_flash_init();
+	ws2812_init(ws2812_pin);
+	EEPROM.begin(SSID_MAX_LEN+1+WIFI_PW_MAX_LEN+1+CHECKSUM_LEN);
 
-  Serial.begin(115200);
+	Serial.begin(115200);
 
-  initSwitches();
+	initSwitches();
 
-  uint8_t ssid_initialized = 0;
-  //read SSID and password from flash
-  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
-	  ssid[i] = EEPROM.read(SSID_ADDR+i);
-	  if(ssid[i] != 0x00){
-		  ssid_initialized = 0xFF;
-	  }
-  }
-  for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
-	  password[i] = EEPROM.read(WIFI_PW_ADDR+i);
-  }
-  uint32_t checksum = 0;
-  for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
-	  checksum |= ((uint32_t)EEPROM.read(CHECKSUM_ADDR+i))<<(8*i);
-  }
+	uint8_t ssid_initialized = 0;
+	//read SSID and password from flash
+	for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
+		ssid[i] = EEPROM.read(SSID_ADDR+i);
+		if(ssid[i] != 0x00){
+			ssid_initialized = 0xFF;
+		}
+	}
+	for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
+		password[i] = EEPROM.read(WIFI_PW_ADDR+i);
+	}
+	uint32_t checksum = 0;
+	for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
+		checksum |= ((uint32_t)EEPROM.read(CHECKSUM_ADDR+i))<<(8*i);
+	}
 
-  if(getEffectMode() == 0x0000 || checksum != calculateWIFIChecksum()){
-	  //copy default SSID to EEPROM and to the ssid variable
-	  const char* default_ssid = DEFAULT_SSID;
-	  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
-		  EEPROM.write(SSID_ADDR + i, default_ssid[i]);
-		  ssid[i] = default_ssid[i];
-		  if(default_ssid[i] == '\0'){
-			  break;
-		  }
-	  }
-	  //copy default password to EEPROM and to the password variable
-	  const char* default_pw = DEFAULT_WIFI_PW;
-	  for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
-		  EEPROM.write(WIFI_PW_ADDR + i, default_pw[i]);
-		  password[i] = default_pw[i];
-		  if(default_pw[i] == '\0'){
-			  break;
-		  }
-	  }
-	  checksum = calculateWIFIChecksum();
-	  for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
-		  EEPROM.write(CHECKSUM_ADDR+i, (uint8_t)(checksum>>(8*i)));
-	  }
-	  EEPROM.commit();
-  }
+	if(getEffectMode() == 0x0000 || checksum != calculateWIFIChecksum()){
+		//copy default SSID to EEPROM and to the ssid variable
+		const char* default_ssid = DEFAULT_SSID;
+		for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
+			EEPROM.write(SSID_ADDR + i, default_ssid[i]);
+			ssid[i] = default_ssid[i];
+			if(default_ssid[i] == '\0'){
+				break;
+			}
+		}
+		//copy default password to EEPROM and to the password variable
+		const char* default_pw = DEFAULT_WIFI_PW;
+		for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
+			EEPROM.write(WIFI_PW_ADDR + i, default_pw[i]);
+			password[i] = default_pw[i];
+			if(default_pw[i] == '\0'){
+				break;
+			}
+		}
+		checksum = calculateWIFIChecksum();
+		for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
+			EEPROM.write(CHECKSUM_ADDR+i, (uint8_t)(checksum>>(8*i)));
+		}
+		EEPROM.commit();
+	}
 
-  if(!(getEffectMode()>>15) || (getEffectMode()>>14) == 0x03){
-	  initWifi();
-  }
+	if(!(getEffectMode()>>15) || (getEffectMode()>>14) == 0x03){
+		initWifi();
+	}
 
-  initTest();
+	initTest();
 
 	efg_init();
 }
@@ -170,62 +170,62 @@ void loop()
 	}
 	updateEffectMode();
 
-  if(!(getEffectMode()>>15)){	//ArtNet mode
-	  artnet.read();
-  }
-  else if((getEffectMode()>>14) == 0x03){	//standalone mode with access point
-	  static unsigned long lastArtNetUpdateTime = 0;
-	  unsigned long time = millis();
-	  if(time - lastArtNetUpdateTime >  DMX_UPDATE_INTERVAL){
-		  lastArtNetUpdateTime = time;
-		  sendDMXValues();
-	  }
-  }
+	if(!(getEffectMode()>>15)){	//ArtNet mode
+		artnet.read();
+	}
+	else if((getEffectMode()>>14) == 0x03){	//standalone mode with access point
+		static unsigned long lastArtNetUpdateTime = 0;
+		unsigned long time = millis();
+		if(time - lastArtNetUpdateTime >  DMX_UPDATE_INTERVAL){
+			lastArtNetUpdateTime = time;
+			sendDMXValues();
+		}
+	}
 
-  //update effect and LEDs
-  static unsigned long lastLedUpdateTime = millis();
-  unsigned long time = millis();
-  if(time - lastLedUpdateTime >= LED_UPDATE_INTERVAL){
-	  efg_inc_time_diff(time - lastLedUpdateTime>0xFF?0xFF:time-lastLedUpdateTime);
-	  efg_update();
-	  lastLedUpdateTime = time;
-	  ws2812_setColors(NUMBER_LEDS, efg_get_data());
-  }
+	//update effect and LEDs
+	static unsigned long lastLedUpdateTime = millis();
+	unsigned long time = millis();
+	if(time - lastLedUpdateTime >= LED_UPDATE_INTERVAL){
+		efg_inc_time_diff(time - lastLedUpdateTime>0xFF?0xFF:time-lastLedUpdateTime);
+		efg_update();
+		lastLedUpdateTime = time;
+		ws2812_setColors(NUMBER_LEDS, efg_get_data());
+	}
 
-  if(schedule_restart){
-	 schedule_restart = 0;
-	 delay(1000);
-	 ESP.restart();
-  }
+	if(schedule_restart){
+		schedule_restart = 0;
+		delay(1000);
+		ESP.restart();
+	}
 }
 
 //void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data, IPAddress remoteIP)
 void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
 {
-  static bool bufferFlushed = false;
-  static unsigned long lastUpdateTime = 0;
-  if(millis()-lastUpdateTime < DMX_UPDATE_INTERVAL){
-    artnet.flushBuffer();
-    return;
-  }
-  if(!bufferFlushed){
-    artnet.flushBuffer();
-    bufferFlushed = true;
-    return;
-  }
-  if(universe == getDmxUniverse()){
-    bufferFlushed = false;
-    lastUpdateTime = millis();
-  }
-  else{
-	  return;
-  }
-  //read dmx values
-  uint8_t dmxValues[NDMXVALUES];
-  for(int i = getDmxAddress()-1, j=0; j < NDMXVALUES; i++, j++){
-	  dmxValues[j] = data[i];
-  }
-  dmx_decode(dmxValues, getStripMode());
+	static bool bufferFlushed = false;
+	static unsigned long lastUpdateTime = 0;
+	if(millis()-lastUpdateTime < DMX_UPDATE_INTERVAL){
+		artnet.flushBuffer();
+		return;
+	}
+	if(!bufferFlushed){
+		artnet.flushBuffer();
+		bufferFlushed = true;
+		return;
+	}
+	if(universe == getDmxUniverse()){
+		bufferFlushed = false;
+		lastUpdateTime = millis();
+	}
+	else{
+		return;
+	}
+	//read dmx values
+	uint8_t dmxValues[NDMXVALUES];
+	for(int i = getDmxAddress()-1, j=0; j < NDMXVALUES; i++, j++){
+		dmxValues[j] = data[i];
+	}
+	dmx_decode(dmxValues, getStripMode());
 }
 
 void onSync(IPAddress remoteIP) {
@@ -325,10 +325,10 @@ uint16_t getDmxUniverse(){
 }
 
 uint8_t invert_bitorder(uint8_t b){
-	   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-	   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-	   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-	   return b;
+	b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+	b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+	b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+	return b;
 }
 uint16_t getEffectMode(){
 	return invert_bitorder(ADDR_SWITCH) | (invert_bitorder(UNIVERSE_SWITCH) << 8);
@@ -525,138 +525,138 @@ void updateEffectMode(){
 			}
 			effect_step = (effect_step + 1) % 8;
 			break;
-		case 1:
-		{
-			uint8_t r = (getEffectMode()<<5) & 0xE0;
-			if(r)
-				r |= 0x1F;
-			uint8_t g = (getEffectMode()<<2) & 0xE0;
-			if(g)
-				g |= 0x1F;
-			uint8_t b = (getEffectMode()>>1) & 0xE0;
-			if(b)
-				b |= 0x1F;
-			efg_color_set_steady(r, g, b);
-			switch(effect_step){
-			case 0:
-				efg_set_blurr(m_tear_fb, 1, 20, 100, 3);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
 			case 1:
-				efg_set_blurr(m_chase_blurr_f, 1, 20, 100, 2);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
-			case 2:
-				efg_set_blurr(m_chase_blurr_fb, 3, 110, 100, 3);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
-			case 3:
-				efg_set_blurr(m_tear_f, 2, 25, 100, 4);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
-			case 4:
-				efg_set_blurr(m_chase_blurr_f, NUMBER_LEDS, 100, 100, 0);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
-			case 5:
-				efg_set_blurr(m_tear_fb, 1, 110, 100, 10);
-				nextEffectUpdateTime = millis() + 60000;
+			{
+				uint8_t r = (getEffectMode()<<5) & 0xE0;
+				if(r)
+					r |= 0x1F;
+				uint8_t g = (getEffectMode()<<2) & 0xE0;
+				if(g)
+					g |= 0x1F;
+				uint8_t b = (getEffectMode()>>1) & 0xE0;
+				if(b)
+					b |= 0x1F;
+				efg_color_set_steady(r, g, b);
+				switch(effect_step){
+				case 0:
+					efg_set_blurr(m_tear_fb, 1, 20, 100, 3);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 1:
+					efg_set_blurr(m_chase_blurr_f, 1, 20, 100, 2);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 2:
+					efg_set_blurr(m_chase_blurr_fb, 3, 110, 100, 3);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 3:
+					efg_set_blurr(m_tear_f, 2, 25, 100, 4);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 4:
+					efg_set_blurr(m_chase_blurr_f, NUMBER_LEDS, 100, 100, 0);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 5:
+					efg_set_blurr(m_tear_fb, 1, 110, 100, 10);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				}
+				effect_step = (effect_step + 1) % 6;
 				break;
 			}
-			effect_step = (effect_step + 1) % 6;
-			break;
-		}
-		case 2:
-			switch(effect_step){
-			case 0:
-				efg_set_blurr(m_tear_f, 2, 30, 400, 20);
-				efg_color_set_steady(255, 110, 0);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
-			case 1:
-				efg_set_blurr(m_tear_f, 2, 30, 400, 4);
-				efg_color_set_steady(255, 0, 15);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
 			case 2:
-				efg_set_blurr(m_chase_blurr_f, 2, 60, 400, 10);
-				efg_color_set_steady(255, 30, 0);
-				nextEffectUpdateTime = millis() + 60000;
+				switch(effect_step){
+				case 0:
+					efg_set_blurr(m_tear_f, 2, 30, 400, 20);
+					efg_color_set_steady(255, 110, 0);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 1:
+					efg_set_blurr(m_tear_f, 2, 30, 400, 4);
+					efg_color_set_steady(255, 0, 15);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 2:
+					efg_set_blurr(m_chase_blurr_f, 2, 60, 400, 10);
+					efg_color_set_steady(255, 30, 0);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 3:
+					efg_set_blurr(m_chase_blurr_f, 2, 60, 400, 10);
+					efg_color_set_steady(255, 60, 0);
+					nextEffectUpdateTime = millis() + 60000;
+					break;
+				case 4:
+					efg_set_steady();
+					efg_color_set_rainbow_chase(c_rainbow_chase_f, 600, 100, 100);
+					break;
+				}
+				effect_step = (effect_step + 1) % 5;
 				break;
-			case 3:
-				efg_set_blurr(m_chase_blurr_f, 2, 60, 400, 10);
-				efg_color_set_steady(255, 60, 0);
-				nextEffectUpdateTime = millis() + 60000;
-				break;
-			case 4:
-				efg_set_steady();
-				efg_color_set_rainbow_chase(c_rainbow_chase_f, 600, 100, 100);
-				break;
-			}
-			effect_step = (effect_step + 1) % 5;
-			break;
-		case 3:
-			//not implemented
-			efg_color_set_steady(0, 0, 0);	//todo: remove this line when implementing function
-			switch(effect_step){
-			case 0:
-				break;
-			case 1:
-				break;
-			case 2:
-				break;
-			case 3:
-				break;
-			case 4:
-				break;
-			case 5:
-				break;
-			}
-			effect_step = (effect_step + 1) % 6;
-			break;
+				case 3:
+					//not implemented
+					efg_color_set_steady(0, 0, 0);	//todo: remove this line when implementing function
+					switch(effect_step){
+					case 0:
+						break;
+					case 1:
+						break;
+					case 2:
+						break;
+					case 3:
+						break;
+					case 4:
+						break;
+					case 5:
+						break;
+					}
+					effect_step = (effect_step + 1) % 6;
+					break;
 		}
 		efg_normalize_values();
 	}
 }
 
 void initWifi(){
-  if(!(getEffectMode()>>15)){
-	  WiFi.begin(ssid, password);
-	  WiFi.setHostname(HOST_NAME);
-	  while (WiFi.status() != WL_CONNECTED) {
-		delay(250);
-		Serial.print(".");
-	  }
-	  Serial.println("");
-	  Serial.print("Connected to ");
-	  Serial.println(ssid);
-	  Serial.print("IP address: ");
-	  Serial.println(WiFi.localIP());
+	if(!(getEffectMode()>>15)){
+		WiFi.begin(ssid, password);
+		WiFi.setHostname(HOST_NAME);
+		while (WiFi.status() != WL_CONNECTED) {
+			delay(250);
+			Serial.print(".");
+		}
+		Serial.println("");
+		Serial.print("Connected to ");
+		Serial.println(ssid);
+		Serial.print("IP address: ");
+		Serial.println(WiFi.localIP());
 
-	  artnet.begin();
+		artnet.begin();
 
-	  // this will be called for each packet received
-	  artnet.setArtDmxCallback(onDmxFrame);
-	  wifi_initialized = 1;
-	  wifi_ap = 0;
-	  initTestBlue();
-  }
-  else{
-	  WiFi.softAP(ssid, password);
-	  IPAddress IP = WiFi.softAPIP();
-	  Serial.print("AP IP address: ");
-	  Serial.println(IP);
+		// this will be called for each packet received
+		artnet.setArtDmxCallback(onDmxFrame);
+		wifi_initialized = 1;
+		wifi_ap = 0;
+		initTestBlue();
+	}
+	else{
+		WiFi.softAP(ssid, password);
+		IPAddress IP = WiFi.softAPIP();
+		Serial.print("AP IP address: ");
+		Serial.println(IP);
 
-	  artnet.begin(host);
-	  artnet.setLength(NDMXVALUES);
-	  artnet.setUniverse(startUniverse);
+		artnet.begin(host);
+		artnet.setLength(NDMXVALUES);
+		artnet.setUniverse(startUniverse);
 
-	  wifi_initialized = 1;
-	  wifi_ap = 1;
-	  initTestBlue();
-	  initTestBlue();
-  }
-  webserver_init();
+		wifi_initialized = 1;
+		wifi_ap = 1;
+		initTestBlue();
+		initTestBlue();
+	}
+	webserver_init();
 }
 
 String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword){
@@ -664,27 +664,27 @@ String changeWifi(const char* currentPassword, const char* newSSID, const char* 
 		return "Setting WIFI credentials failed. Wrong password.";
 	}
 	if(newSSID != NULL && strcmp(newSSID, "") != 0){
-	  for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
-		  EEPROM.write(SSID_ADDR + i, newSSID[i]);
-		  ssid[i] = newSSID[i];
-		  if(newSSID[i] == '\0'){
-			  break;
-		  }
-	  }
+		for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
+			EEPROM.write(SSID_ADDR + i, newSSID[i]);
+			ssid[i] = newSSID[i];
+			if(newSSID[i] == '\0'){
+				break;
+			}
+		}
 	}
 	if(newPassword != NULL && strcmp(newPassword, "") != 0){
-	  for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
-		  EEPROM.write(WIFI_PW_ADDR + i, newPassword[i]);
-		  password[i] = newPassword[i];
-		  if(newPassword[i] == '\0'){
-			  break;
-		  }
-	  }
+		for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
+			EEPROM.write(WIFI_PW_ADDR + i, newPassword[i]);
+			password[i] = newPassword[i];
+			if(newPassword[i] == '\0'){
+				break;
+			}
+		}
 	}
-	  uint32_t checksum = calculateWIFIChecksum();
-	  for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
-		  EEPROM.write(CHECKSUM_ADDR+i, (uint8_t)(checksum>>(8*i)));
-	  }
+	uint32_t checksum = calculateWIFIChecksum();
+	for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
+		EEPROM.write(CHECKSUM_ADDR+i, (uint8_t)(checksum>>(8*i)));
+	}
 	EEPROM.commit();
 	schedule_restart = 0xFF;
 	return "Successfully set new WIFI credentials. You can reset the wifi credentials to their default values by setting "

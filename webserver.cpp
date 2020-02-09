@@ -8,11 +8,11 @@
 #include "webserver.h"
 #include <Arduino.h>
 #ifdef ESP32
-  #include <WiFi.h>
-  #include <AsyncTCP.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
 #else
-  #include <ESP8266WiFi.h>
-  #include <ESPAsyncTCP.h>
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
 #endif
 #include <ESPAsyncWebServer.h>
 
@@ -63,41 +63,37 @@ const char index_html[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 void notFound(AsyncWebServerRequest *request) {
-  request->send(404, "text/plain", "Not found");
+	request->send(404, "text/plain", "Not found");
 }
 
 
 void webserver_init(){
-	 // Send web page with input fields to client
-	  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-	    request->send_P(200, "text/html", index_html);
-	  });
+	// Send web page with input fields to client
+	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+		request->send_P(200, "text/html", index_html);
+	});
 
-	  server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
-	    String current_password;
-	    String new_ssid;
-	    String new_password;
-	    // GET currentPassowrd value on <ESP_IP>/get?input_current_password=<inputMessage>
-	    if (request->hasParam(CURRENT_PASSWORD_INPUT)) {
-	      current_password = request->getParam(CURRENT_PASSWORD_INPUT)->value();
-	    }
-	    // GET newnew  SSID value on <ESP_IP>/get?input_ssid=<inputMessage>
-	    if (request->hasParam(SSID_INPUT)) {
-	      new_ssid = request->getParam(SSID_INPUT)->value();
-	    }
-	    // GET new password value on <ESP_IP>/get?input_password=<inputMessage>
-	    if (request->hasParam(PASSWORD_INPUT)) {
-	      new_password = request->getParam(PASSWORD_INPUT)->value();
-	    }
-	    String reply = changeWifi((current_password != NULL?current_password.c_str():""),
-	    		(new_ssid != NULL?new_ssid.c_str():""), (new_password != NULL?new_password.c_str():""));
-	    request->send(200, "text/html", reply +
-	                                     "<br><a href=\"/\">Return</a>");
-	  });
-	  server.onNotFound(notFound);
-	  server.begin();
-}
-
-void webserver_stop(){
-	server.end();
+	server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
+		String current_password;
+		String new_ssid;
+		String new_password;
+		// GET currentPassowrd value on <ESP_IP>/get?input_current_password=<inputMessage>
+		if (request->hasParam(CURRENT_PASSWORD_INPUT)) {
+			current_password = request->getParam(CURRENT_PASSWORD_INPUT)->value();
+		}
+		// GET newnew  SSID value on <ESP_IP>/get?input_ssid=<inputMessage>
+		if (request->hasParam(SSID_INPUT)) {
+			new_ssid = request->getParam(SSID_INPUT)->value();
+		}
+		// GET new password value on <ESP_IP>/get?input_password=<inputMessage>
+		if (request->hasParam(PASSWORD_INPUT)) {
+			new_password = request->getParam(PASSWORD_INPUT)->value();
+		}
+		String reply = changeWifi((current_password != NULL?current_password.c_str():""),
+				(new_ssid != NULL?new_ssid.c_str():""), (new_password != NULL?new_password.c_str():""));
+		request->send(200, "text/html", reply +
+				"<br><a href=\"/\">Return</a>");
+	});
+	server.onNotFound(notFound);
+	server.begin();
 }

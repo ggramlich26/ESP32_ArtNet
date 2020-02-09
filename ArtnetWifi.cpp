@@ -23,7 +23,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-*/
+ */
 
 #include "ArtnetWifi.h"
 
@@ -34,128 +34,128 @@ ArtnetWifi::ArtnetWifi() {}
 
 void ArtnetWifi::begin(String hostname)
 {
-  Udp.begin(ART_NET_PORT);
-  host = hostname;
-  sequence = 1;
-  physical = 0;
+	Udp.begin(ART_NET_PORT);
+	host = hostname;
+	sequence = 1;
+	physical = 0;
 }
 
 void ArtnetWifi::end(){
-  Udp.stop();
+	Udp.stop();
 }
 
 uint16_t ArtnetWifi::read(void)
 {
-  packetSize = Udp.parsePacket();
+	packetSize = Udp.parsePacket();
 
-  if (packetSize <= MAX_BUFFER_ARTNET && packetSize > 0)
-  {
-      Udp.read(artnetPacket, MAX_BUFFER_ARTNET);
+	if (packetSize <= MAX_BUFFER_ARTNET && packetSize > 0)
+	{
+		Udp.read(artnetPacket, MAX_BUFFER_ARTNET);
 
-      // Check that packetID is "Art-Net" else ignore
-      if (memcmp(artnetPacket, artnetId, sizeof(artnetId)) != 0) {
-        return 0;
-      }
+		// Check that packetID is "Art-Net" else ignore
+		if (memcmp(artnetPacket, artnetId, sizeof(artnetId)) != 0) {
+			return 0;
+		}
 
-      opcode = artnetPacket[8] | artnetPacket[9] << 8;
+		opcode = artnetPacket[8] | artnetPacket[9] << 8;
 
-      if (opcode == ART_DMX)
-      {
-        sequence = artnetPacket[12];
-        incomingUniverse = artnetPacket[14] | artnetPacket[15] << 8;
-        dmxDataLength = artnetPacket[17] | artnetPacket[16] << 8;
+		if (opcode == ART_DMX)
+		{
+			sequence = artnetPacket[12];
+			incomingUniverse = artnetPacket[14] | artnetPacket[15] << 8;
+			dmxDataLength = artnetPacket[17] | artnetPacket[16] << 8;
 
-        if (artDmxCallback) (*artDmxCallback)(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START);
-        if (artDmxFunc) {
-          artDmxFunc(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START);
-        }
-        return ART_DMX;
-      }
-      if (opcode == ART_POLL)
-      {
-        return ART_POLL;
-      }
-  }
+			if (artDmxCallback) (*artDmxCallback)(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START);
+			if (artDmxFunc) {
+				artDmxFunc(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START);
+			}
+			return ART_DMX;
+		}
+		if (opcode == ART_POLL)
+		{
+			return ART_POLL;
+		}
+	}
 
-  return 0;
+	return 0;
 }
 
 uint16_t ArtnetWifi::makePacket(void)
 {
-  uint16_t len;
-  uint16_t version;
+	uint16_t len;
+	uint16_t version;
 
-  memcpy(artnetPacket, artnetId, sizeof(artnetId));
-  opcode = ART_DMX;
-  artnetPacket[8] = opcode;
-  artnetPacket[9] = opcode >> 8;
-  version = 14;
-  artnetPacket[11] = version;
-  artnetPacket[10] = version >> 8;
-  artnetPacket[12] = sequence;
-  sequence++;
-  if (!sequence) {
-    sequence = 1;
-  }
-  artnetPacket[13] = physical;
-  artnetPacket[14] = outgoingUniverse;
-  artnetPacket[15] = outgoingUniverse >> 8;
-  len = dmxDataLength + (dmxDataLength % 2); // make a even number
-  artnetPacket[17] = len;
-  artnetPacket[16] = len >> 8;
+	memcpy(artnetPacket, artnetId, sizeof(artnetId));
+	opcode = ART_DMX;
+	artnetPacket[8] = opcode;
+	artnetPacket[9] = opcode >> 8;
+	version = 14;
+	artnetPacket[11] = version;
+	artnetPacket[10] = version >> 8;
+	artnetPacket[12] = sequence;
+	sequence++;
+	if (!sequence) {
+		sequence = 1;
+	}
+	artnetPacket[13] = physical;
+	artnetPacket[14] = outgoingUniverse;
+	artnetPacket[15] = outgoingUniverse >> 8;
+	len = dmxDataLength + (dmxDataLength % 2); // make a even number
+	artnetPacket[17] = len;
+	artnetPacket[16] = len >> 8;
 
-  return len;
+	return len;
 }
 
 int ArtnetWifi::write(void)
 {
-  uint16_t len;
+	uint16_t len;
 
-  len = makePacket();
-  Udp.beginPacket(host.c_str(), ART_NET_PORT);
-  Udp.write(artnetPacket, ART_DMX_START + len);
+	len = makePacket();
+	Udp.beginPacket(host.c_str(), ART_NET_PORT);
+	Udp.write(artnetPacket, ART_DMX_START + len);
 
-  return Udp.endPacket();
+	return Udp.endPacket();
 }
 
 int ArtnetWifi::write(IPAddress ip)
 {
-  uint16_t len;
+	uint16_t len;
 
-  len = makePacket();
-  Udp.beginPacket(ip, ART_NET_PORT);
-  Udp.write(artnetPacket, ART_DMX_START + len);
+	len = makePacket();
+	Udp.beginPacket(ip, ART_NET_PORT);
+	Udp.write(artnetPacket, ART_DMX_START + len);
 
-  return Udp.endPacket();
+	return Udp.endPacket();
 }
 
 void ArtnetWifi::setByte(uint16_t pos, uint8_t value)
 {
-  if (pos > 512) {
-    return;
-  }
-  artnetPacket[ART_DMX_START + pos] = value;
+	if (pos > 512) {
+		return;
+	}
+	artnetPacket[ART_DMX_START + pos] = value;
 }
 
 void ArtnetWifi::printPacketHeader(void)
 {
-  Serial.print("packet size = ");
-  Serial.print(packetSize);
-  Serial.print("\topcode = ");
-  Serial.print(opcode, HEX);
-  Serial.print("\tuniverse number = ");
-  Serial.print(incomingUniverse);
-  Serial.print("\tdata length = ");
-  Serial.print(dmxDataLength);
-  Serial.print("\tsequence n0. = ");
-  Serial.println(sequence);
+	Serial.print("packet size = ");
+	Serial.print(packetSize);
+	Serial.print("\topcode = ");
+	Serial.print(opcode, HEX);
+	Serial.print("\tuniverse number = ");
+	Serial.print(incomingUniverse);
+	Serial.print("\tdata length = ");
+	Serial.print(dmxDataLength);
+	Serial.print("\tsequence n0. = ");
+	Serial.println(sequence);
 }
 
 void ArtnetWifi::printPacketContent(void)
 {
-  for (uint16_t i = ART_DMX_START ; i < dmxDataLength ; i++){
-    Serial.print(artnetPacket[i], DEC);
-    Serial.print("  ");
-  }
-  Serial.println('\n');
+	for (uint16_t i = ART_DMX_START ; i < dmxDataLength ; i++){
+		Serial.print(artnetPacket[i], DEC);
+		Serial.print("  ");
+	}
+	Serial.println('\n');
 }

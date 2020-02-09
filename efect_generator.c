@@ -17,7 +17,7 @@ uint8_t	segment_dist;		//distance between segments in percent of the whole strip
 uint16_t update_interval;	//time in ms until the pattern moves one step
 uint8_t m_blurr_width;      //number of LEDs in each direction that the blurr is wide
 uint8_t segment_1;          //segment to be turned on, 0=nothing, or percentage of whole strip forming one segment to be turned on
-                            //      in case of m_segment_custom
+//      in case of m_segment_custom
 uint8_t segment_2;          //segment to be turned on, 0=nothing
 uint8_t segment_3;          //segment to be turned on, 0=nothing
 uint8_t segment_4;          //segment to be turned on, 0=nothing
@@ -41,47 +41,47 @@ uint8_t data[3*NUMBER_LEDS];
 uint8_t time_passed = 0;	//the time passed since the last update occurred
 
 void efg_init(){
-    current_motion = m_steady;
-    segment_width = 1;
-    segment_dist = 100;
-    update_interval = 20;
-    m_blurr_width = 2;
-    current_color_mode = c_steady;
-    r_value = 0;
-    g_value = 0;
-    b_value = 0;
-    val_value = 255;
-    c_update_interval = 100;
-    c_segment_width = 100;
-    segment_1 = 12;
-    segment_2 = 3;
-    segment_3 = 1;
-    segment_4 = 0;
-    segment_offset_1 = 0;
-    segment_offset_2 = 0;
-    stars_sporn_rate = 22;
-    snow_sporn_rate = 22;
+	current_motion = m_steady;
+	segment_width = 1;
+	segment_dist = 100;
+	update_interval = 20;
+	m_blurr_width = 2;
+	current_color_mode = c_steady;
+	r_value = 0;
+	g_value = 0;
+	b_value = 0;
+	val_value = 255;
+	c_update_interval = 100;
+	c_segment_width = 100;
+	segment_1 = 12;
+	segment_2 = 3;
+	segment_3 = 1;
+	segment_4 = 0;
+	segment_offset_1 = 0;
+	segment_offset_2 = 0;
+	stars_sporn_rate = 22;
+	snow_sporn_rate = 22;
 }
 
 void efg_inc_time_diff(uint16_t diff){
-    time_passed += diff;
+	time_passed += diff;
 }
 
 uint8_t* efg_get_data(){
-    return data;
+	return data;
 }
 
 void efg_update(){
-//	cli();
-    uint8_t local_time_passed = time_passed;
-    time_passed = 0;
-//	sei();
-    update_brightness(local_time_passed);
-    update_color(local_time_passed);
-    for (uint16_t i = 0; i < NUMBER_LEDS; i++){
-        uint8_t brightness = calculate_brightness(i);
-        calculate_color(&data[3*i], i, brightness);
-    }
+	//	cli();
+	uint8_t local_time_passed = time_passed;
+	time_passed = 0;
+	//	sei();
+	update_brightness(local_time_passed);
+	update_color(local_time_passed);
+	for (uint16_t i = 0; i < NUMBER_LEDS; i++){
+		uint8_t brightness = calculate_brightness(i);
+		calculate_color(&data[3*i], i, brightness);
+	}
 }
 
 /**
@@ -96,7 +96,7 @@ void efg_normalize_values(){
 			current_motion == m_chase_blurr_fb ||
 			current_motion == m_tear_f ||
 			current_motion == m_tear_fb
-			){
+	){
 		if(update_interval > 0){
 			update_interval = (uint32_t)update_interval/SPEED_FACTOR;
 			if(update_interval == 0){
@@ -133,7 +133,7 @@ void efg_set_current_motion(uint8_t motion){
 	}
 	reset_brightness();
 	current_motion = motion;
-	}
+}
 
 void efg_set_segment_width(uint8_t width){
 	segment_width = width;
@@ -254,11 +254,11 @@ void efg_set_snow(uint16_t update_interval, uint8_t sporn_rate){
 }
 
 void efg_set_segment(uint8_t mode, uint8_t segment_1, uint8_t segment_2, uint8_t segment_3, uint8_t segment_4){
- efg_set_segment_1(segment_1);
- efg_set_segment_2(segment_2);
- efg_set_segment_3(segment_3);
- efg_set_segment_4(segment_4);
- efg_set_current_motion(mode);
+	efg_set_segment_1(segment_1);
+	efg_set_segment_2(segment_2);
+	efg_set_segment_3(segment_3);
+	efg_set_segment_4(segment_4);
+	efg_set_current_motion(mode);
 }
 
 void efg_set_segment_custom(uint8_t segment1_offset, uint8_t segment1_width, uint8_t segment2_offset, uint8_t segment2_width){
@@ -277,136 +277,136 @@ void efg_set_segment_custom(uint8_t segment1_offset, uint8_t segment1_width, uin
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void update_brightness(uint8_t time_diff){
-    switch(current_motion) {
-    case m_steady:
-        update_brightness_steady(time_diff);
-        break;
-    case m_chase_f:
-        update_brightness_chase_f(time_diff);
-        break;
-    case m_chase_b:
-        update_brightness_chase_b(time_diff);
-        break;
-    case m_chase_cross:
-        update_brightness_chase_cross(time_diff);
-        break;
-    case m_chase_meet:
-        update_brightness_chase_meet(time_diff);
-        break;
-    case m_chase_blurr_f:
-        update_brightness_chase_blurr_f(time_diff);
-        break;
-    case m_chase_blurr_fb:
-        update_brightness_chase_blurr_fb(time_diff);
-        break;
-    case m_tear_f:
-        update_brightness_tear_f(time_diff);
-        break;
-    case m_tear_fb:
-        update_brightness_tear_fb(time_diff);
-        break;
-    case m_flash:
-        update_brightness_flash(time_diff);
-        break;
-    case m_glow:
-        update_brightness_glow(time_diff);
-        break;
-    case m_stars:
-        update_brightness_stars(time_diff);
-        break;
-    case m_segment_4:
-        update_brightness_segment_4(time_diff);
-        break;
-    case m_segment_8:
-        update_brightness_segment_8(time_diff);
-        break;
-    case m_segment_custom:
-        update_brightness_segment_custom(time_diff);
-        break;
-    case m_random:
-        update_brightness_random(time_diff);
-        break;
-    case m_snow:
-        update_brightness_snow(time_diff);
-        break;
-    }
+	switch(current_motion) {
+	case m_steady:
+		update_brightness_steady(time_diff);
+		break;
+	case m_chase_f:
+		update_brightness_chase_f(time_diff);
+		break;
+	case m_chase_b:
+		update_brightness_chase_b(time_diff);
+		break;
+	case m_chase_cross:
+		update_brightness_chase_cross(time_diff);
+		break;
+	case m_chase_meet:
+		update_brightness_chase_meet(time_diff);
+		break;
+	case m_chase_blurr_f:
+		update_brightness_chase_blurr_f(time_diff);
+		break;
+	case m_chase_blurr_fb:
+		update_brightness_chase_blurr_fb(time_diff);
+		break;
+	case m_tear_f:
+		update_brightness_tear_f(time_diff);
+		break;
+	case m_tear_fb:
+		update_brightness_tear_fb(time_diff);
+		break;
+	case m_flash:
+		update_brightness_flash(time_diff);
+		break;
+	case m_glow:
+		update_brightness_glow(time_diff);
+		break;
+	case m_stars:
+		update_brightness_stars(time_diff);
+		break;
+	case m_segment_4:
+		update_brightness_segment_4(time_diff);
+		break;
+	case m_segment_8:
+		update_brightness_segment_8(time_diff);
+		break;
+	case m_segment_custom:
+		update_brightness_segment_custom(time_diff);
+		break;
+	case m_random:
+		update_brightness_random(time_diff);
+		break;
+	case m_snow:
+		update_brightness_snow(time_diff);
+		break;
+	}
 }
 
 void reset_brightness(){
-    reset_brightness_steady();
-    reset_brightness_chase_f();
-    reset_brightness_chase_b();
-    reset_brightness_chase_cross();
-    reset_brightness_chase_meet();
-    reset_brightness_chase_blurr_f();
-    reset_brightness_chase_blurr_fb();
-    reset_brightness_tear_f();
-    reset_brightness_tear_fb();
-    reset_brightness_flash();
-    reset_brightness_glow();
-    reset_brightness_stars();
-    reset_brightness_segment_4();
-    reset_brightness_segment_8();
-    reset_brightness_segment_custom();
-    reset_brightness_random();
-    reset_brightness_snow();
+	reset_brightness_steady();
+	reset_brightness_chase_f();
+	reset_brightness_chase_b();
+	reset_brightness_chase_cross();
+	reset_brightness_chase_meet();
+	reset_brightness_chase_blurr_f();
+	reset_brightness_chase_blurr_fb();
+	reset_brightness_tear_f();
+	reset_brightness_tear_fb();
+	reset_brightness_flash();
+	reset_brightness_glow();
+	reset_brightness_stars();
+	reset_brightness_segment_4();
+	reset_brightness_segment_8();
+	reset_brightness_segment_custom();
+	reset_brightness_random();
+	reset_brightness_snow();
 }
 
 uint8_t calculate_brightness(uint16_t i){
-    switch(current_motion) {
-    case m_steady:
-        return calculate_brightness_steady(i);
-        break;
-    case m_chase_f:
-        return calculate_brightness_chase_f(i);
-        break;
-    case m_chase_b:
-        return calculate_brightness_chase_b(i);
-        break;
-    case m_chase_cross:
-        return calculate_brightness_chase_cross(i);
-        break;
-    case m_chase_meet:
-        return calculate_brightness_chase_meet(i);
-        break;
-    case m_chase_blurr_f:
-        return calculate_brightness_chase_blurr_f(i);
-        break;
-    case m_chase_blurr_fb:
-        return calculate_brightness_chase_blurr_fb(i);
-        break;
-    case m_tear_f:
-        return calculate_brightness_tear_f(i);
-        break;
-    case m_tear_fb:
-        return calculate_brightness_tear_fb(i);
-        break;
-    case m_flash:
-        return calculate_brightness_flash(i);
-        break;
-    case m_glow:
-        return calculate_brightness_glow(i);
-        break;
-    case m_stars:
-        return calculate_brightness_stars(i);
-        break;
-    case m_segment_4:
-        return calculate_brightness_segment_4(i);
-        break;
-    case m_segment_8:
-        return calculate_brightness_segment_8(i);
-        break;
-    case m_segment_custom:
-        return calculate_brightness_segment_custom(i);
-        break;
-    case m_random:
-        return calculate_brightness_random(i);
-        break;
-    case m_snow:
-        return calculate_brightness_snow(i);
-        break;
-    }
-    return 0;
+	switch(current_motion) {
+	case m_steady:
+		return calculate_brightness_steady(i);
+		break;
+	case m_chase_f:
+		return calculate_brightness_chase_f(i);
+		break;
+	case m_chase_b:
+		return calculate_brightness_chase_b(i);
+		break;
+	case m_chase_cross:
+		return calculate_brightness_chase_cross(i);
+		break;
+	case m_chase_meet:
+		return calculate_brightness_chase_meet(i);
+		break;
+	case m_chase_blurr_f:
+		return calculate_brightness_chase_blurr_f(i);
+		break;
+	case m_chase_blurr_fb:
+		return calculate_brightness_chase_blurr_fb(i);
+		break;
+	case m_tear_f:
+		return calculate_brightness_tear_f(i);
+		break;
+	case m_tear_fb:
+		return calculate_brightness_tear_fb(i);
+		break;
+	case m_flash:
+		return calculate_brightness_flash(i);
+		break;
+	case m_glow:
+		return calculate_brightness_glow(i);
+		break;
+	case m_stars:
+		return calculate_brightness_stars(i);
+		break;
+	case m_segment_4:
+		return calculate_brightness_segment_4(i);
+		break;
+	case m_segment_8:
+		return calculate_brightness_segment_8(i);
+		break;
+	case m_segment_custom:
+		return calculate_brightness_segment_custom(i);
+		break;
+	case m_random:
+		return calculate_brightness_random(i);
+		break;
+	case m_snow:
+		return calculate_brightness_snow(i);
+		break;
+	}
+	return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,32 +419,32 @@ uint16_t cf_time_passed = 0;
 uint16_t cf_position = 0;
 
 void update_brightness_chase_f(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    cf_time_passed += time_diff;
-    cf_position += cf_time_passed / update_interval;
-    cf_time_passed = cf_time_passed % update_interval;
-    if(cf_position >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
-        cf_position = NUMBER_LEDS + (cf_position - NUMBER_LEDS)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100);
-    }
+	if(update_interval == 0){
+		return;
+	}
+	cf_time_passed += time_diff;
+	cf_position += cf_time_passed / update_interval;
+	cf_time_passed = cf_time_passed % update_interval;
+	if(cf_position >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
+		cf_position = NUMBER_LEDS + (cf_position - NUMBER_LEDS)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100);
+	}
 }
 
 void reset_brightness_chase_f(){
-    cf_time_passed = 0;
-    cf_position = 0;
+	cf_time_passed = 0;
+	cf_position = 0;
 }
 
 uint8_t calculate_brightness_chase_f(uint16_t i){
-    if(i > cf_position){
-        return 0;
-    }
-    if((cf_position-i)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
-        return 255;
-    }
-    else{
-        return 0;
-    }
+	if(i > cf_position){
+		return 0;
+	}
+	if((cf_position-i)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
+		return 255;
+	}
+	else{
+		return 0;
+	}
 }
 
 
@@ -459,35 +459,35 @@ uint16_t cb_time_passed = 0;
 int16_t cb_position = NUMBER_LEDS;
 
 void update_brightness_chase_b(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    cb_time_passed += time_diff;
-    cb_position -= cb_time_passed / update_interval;
-    cb_time_passed = cb_time_passed % update_interval;
-    if(cb_position < 0){
-        if(-cb_position >= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
-            cb_position = -((-cb_position)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100));
-        }
-    }
+	if(update_interval == 0){
+		return;
+	}
+	cb_time_passed += time_diff;
+	cb_position -= cb_time_passed / update_interval;
+	cb_time_passed = cb_time_passed % update_interval;
+	if(cb_position < 0){
+		if(-cb_position >= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
+			cb_position = -((-cb_position)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100));
+		}
+	}
 }
 
 void reset_brightness_chase_b(){
-    cb_position = NUMBER_LEDS;
-    cb_time_passed = 0;
+	cb_position = NUMBER_LEDS;
+	cb_time_passed = 0;
 }
 
 uint8_t calculate_brightness_chase_b(uint16_t i){
 	int16_t is = (int16_t)i;
-    if(is < cb_position){
-        return 0;
-    }
-    if((is-cb_position)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
-        return 255;
-    }
-    else{
-        return 0;
-    }
+	if(is < cb_position){
+		return 0;
+	}
+	if((is-cb_position)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
+		return 255;
+	}
+	else{
+		return 0;
+	}
 }
 
 
@@ -502,50 +502,50 @@ int16_t cc_position_b = NUMBER_LEDS;
 uint16_t cc_time_passed = 0;
 
 void update_brightness_chase_cross(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    cc_time_passed += time_diff;
-    cc_position_f += cc_time_passed / update_interval;
-    cc_position_b -= cc_time_passed / update_interval;
-    cc_time_passed = cc_time_passed % update_interval;
+	if(update_interval == 0){
+		return;
+	}
+	cc_time_passed += time_diff;
+	cc_position_f += cc_time_passed / update_interval;
+	cc_position_b -= cc_time_passed / update_interval;
+	cc_time_passed = cc_time_passed % update_interval;
 
-    //forward running part
-    if(cc_position_f >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
-        cc_position_f = NUMBER_LEDS + (cc_position_f - NUMBER_LEDS)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100);
-    }
+	//forward running part
+	if(cc_position_f >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
+		cc_position_f = NUMBER_LEDS + (cc_position_f - NUMBER_LEDS)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100);
+	}
 
-    //backward running part
-    if(cc_position_b < 0){
-        if(-cc_position_b >= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
-            cc_position_b = -((-cc_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100));
-        }
-    }
+	//backward running part
+	if(cc_position_b < 0){
+		if(-cc_position_b >= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100){
+			cc_position_b = -((-cc_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100));
+		}
+	}
 }
 
 void reset_brightness_chase_cross(){
-    cc_position_f = 0;
-    cc_position_b = NUMBER_LEDS;
-    cc_time_passed = 0;
+	cc_position_f = 0;
+	cc_position_b = NUMBER_LEDS;
+	cc_time_passed = 0;
 }
 
 uint8_t calculate_brightness_chase_cross(uint16_t i){
-    //forward running part
-    if(i <= cc_position_f){
-        if((cc_position_f-i)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
-            return 255;
-        }
-    }
-    //backwards running part
-    int16_t is = (int16_t)i;
-    if(is >= cc_position_b){
-        if((is-cc_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
-            return 255;
-        }
-    }
+	//forward running part
+	if(i <= cc_position_f){
+		if((cc_position_f-i)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
+			return 255;
+		}
+	}
+	//backwards running part
+	int16_t is = (int16_t)i;
+	if(is >= cc_position_b){
+		if((is-cc_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/100) < segment_width){
+			return 255;
+		}
+	}
 
-    //default:
-    return 0;
+	//default:
+		return 0;
 }
 
 
@@ -561,48 +561,48 @@ int16_t cm_position_b = NUMBER_LEDS;
 uint16_t cm_time_passed = 0;
 
 void update_brightness_chase_meet(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    cm_time_passed += time_diff;
-    cm_position_f += cm_time_passed / update_interval;
-    cm_position_b -= cm_time_passed / update_interval;
-    cm_time_passed = cm_time_passed % update_interval;
+	if(update_interval == 0){
+		return;
+	}
+	cm_time_passed += time_diff;
+	cm_position_f += cm_time_passed / update_interval;
+	cm_position_b -= cm_time_passed / update_interval;
+	cm_time_passed = cm_time_passed % update_interval;
 
-    //forward running part
-    if(cm_position_f >= NUMBER_LEDS/2 + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/200){
-        cm_position_f = NUMBER_LEDS/2 + (cm_position_f - NUMBER_LEDS/2)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200);
-    }
+	//forward running part
+	if(cm_position_f >= NUMBER_LEDS/2 + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/200){
+		cm_position_f = NUMBER_LEDS/2 + (cm_position_f - NUMBER_LEDS/2)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200);
+	}
 
-    //backward running part
-    if(cm_position_b <= NUMBER_LEDS/2){
-        if(NUMBER_LEDS/2-cm_position_b >= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/200){
-            cm_position_b = NUMBER_LEDS/2-((NUMBER_LEDS/2-cm_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200));
-        }
-    }
+	//backward running part
+	if(cm_position_b <= NUMBER_LEDS/2){
+		if(NUMBER_LEDS/2-cm_position_b >= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/200){
+			cm_position_b = NUMBER_LEDS/2-((NUMBER_LEDS/2-cm_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200));
+		}
+	}
 }
 
 void reset_brightness_chase_meet(){
-    cm_position_f = 0;
-    cm_position_b = NUMBER_LEDS;
+	cm_position_f = 0;
+	cm_position_b = NUMBER_LEDS;
 }
 
 uint8_t calculate_brightness_chase_meet(uint16_t i){
-    //forward running part
-    if(i <= cm_position_f && i <= NUMBER_LEDS/2){
-        if((cm_position_f-i)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200) < segment_width){
-            return 255;
-        }
-    }
-    //backwards running part
-    if((int32_t)i >= cm_position_b && i >= NUMBER_LEDS/2){
-        if((i-cm_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200) < segment_width){
-            return 255;
-        }
-    }
+	//forward running part
+	if(i <= cm_position_f && i <= NUMBER_LEDS/2){
+		if((cm_position_f-i)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200) < segment_width){
+			return 255;
+		}
+	}
+	//backwards running part
+	if((int32_t)i >= cm_position_b && i >= NUMBER_LEDS/2){
+		if((i-cm_position_b)%(segment_width+(uint32_t)segment_dist*NUMBER_LEDS/200) < segment_width){
+			return 255;
+		}
+	}
 
-    //default:
-    return 0;
+	//default:
+	return 0;
 }
 
 
@@ -631,40 +631,40 @@ uint8_t calculate_brightness_chase_meet(uint16_t i){
 float cbf_position = 0;
 
 void update_brightness_chase_blurr_f(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    cbf_position += (float)time_diff / update_interval;
-    while(cbf_position >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100 + m_blurr_width +1){
-    	cbf_position -= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100;
-    }
+	if(update_interval == 0){
+		return;
+	}
+	cbf_position += (float)time_diff / update_interval;
+	while(cbf_position >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100 + m_blurr_width +1){
+		cbf_position -= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100;
+	}
 }
 
 void reset_brightness_chase_blurr_f(){
-    cbf_position = 0;
+	cbf_position = 0;
 }
 
 uint8_t calculate_brightness_chase_blurr_f(uint16_t i){
-    if(i - m_blurr_width - 1 > cbf_position){
-        return 0;
-    }
-    while(i + m_blurr_width + segment_width < cbf_position){
-    	i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
-    }
-    if(i > cbf_position + m_blurr_width + 1){
-        return 0;
-    }
-    //right blurr
-    if(i > cbf_position){
-    	return 255-(uint8_t)(255*(i-cbf_position)/(m_blurr_width+1));
-    }
-    if(i + segment_width - 1 >= cbf_position){
-    	return 255;
-    }
-    //left blurr
-    else{
-    	return 255-(uint8_t)(255*(cbf_position-(i+segment_width-1))/(m_blurr_width+1));
-    }
+	if(i - m_blurr_width - 1 > cbf_position){
+		return 0;
+	}
+	while(i + m_blurr_width + segment_width < cbf_position){
+		i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
+	}
+	if(i > cbf_position + m_blurr_width + 1){
+		return 0;
+	}
+	//right blurr
+	if(i > cbf_position){
+		return 255-(uint8_t)(255*(i-cbf_position)/(m_blurr_width+1));
+	}
+	if(i + segment_width - 1 >= cbf_position){
+		return 255;
+	}
+	//left blurr
+	else{
+		return 255-(uint8_t)(255*(cbf_position-(i+segment_width-1))/(m_blurr_width+1));
+	}
 }
 
 
@@ -679,50 +679,50 @@ float cbfb_position = 0;
 uint16_t cbfb_mode = 0; //0 = forward; 1 = backward
 
 void update_brightness_chase_blurr_fb(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    if(cbfb_mode == 0){
+	if(update_interval == 0){
+		return;
+	}
+	if(cbfb_mode == 0){
 		cbfb_position += (float)time_diff / update_interval;
-        if(cbfb_position > NUMBER_LEDS){
-            cbfb_mode = 1;
-            cbfb_position = 2*NUMBER_LEDS - cbfb_position;
-        }
-    }
-    else{
+		if(cbfb_position > NUMBER_LEDS){
+			cbfb_mode = 1;
+			cbfb_position = 2*NUMBER_LEDS - cbfb_position;
+		}
+	}
+	else{
 		cbfb_position -= (float)time_diff / update_interval;
-        if(cbfb_position < 0){
-            cbfb_mode = 0;
-            cbfb_position = -cbfb_position;
-        }
-    }
+		if(cbfb_position < 0){
+			cbfb_mode = 0;
+			cbfb_position = -cbfb_position;
+		}
+	}
 }
 
 void reset_brightness_chase_blurr_fb(){
-    cbfb_position = 0;
+	cbfb_position = 0;
 }
 
 uint8_t calculate_brightness_chase_blurr_fb(uint16_t i){
-    if(i - m_blurr_width - 1 > cbfb_position){
-        return 0;
-    }
-    while(i + m_blurr_width + segment_width < cbfb_position){
-    	i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
-    }
-    if(i > cbfb_position + m_blurr_width + 1){
-        return 0;
-    }
-    //right blurr
-    if(i > cbfb_position){
-    	return 255-(uint8_t)(255*(i-cbfb_position)/(m_blurr_width+1));
-    }
-    if(i + segment_width - 1 >= cbfb_position){
-    	return 255;
-    }
-    //left blurr
-    else{
-    	return 255-(uint8_t)(255*(cbfb_position-(i+segment_width-1))/(m_blurr_width+1));
-    }
+	if(i - m_blurr_width - 1 > cbfb_position){
+		return 0;
+	}
+	while(i + m_blurr_width + segment_width < cbfb_position){
+		i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
+	}
+	if(i > cbfb_position + m_blurr_width + 1){
+		return 0;
+	}
+	//right blurr
+	if(i > cbfb_position){
+		return 255-(uint8_t)(255*(i-cbfb_position)/(m_blurr_width+1));
+	}
+	if(i + segment_width - 1 >= cbfb_position){
+		return 255;
+	}
+	//left blurr
+	else{
+		return 255-(uint8_t)(255*(cbfb_position-(i+segment_width-1))/(m_blurr_width+1));
+	}
 }
 
 
@@ -737,40 +737,40 @@ uint16_t tf_time_passed = 0;
 float tf_position = 0;
 
 void update_brightness_tear_f(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    tf_position += (float)time_diff / update_interval;
-    while(tf_position >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100 + m_blurr_width +1){
-    	tf_position -= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100;
-    }
+	if(update_interval == 0){
+		return;
+	}
+	tf_position += (float)time_diff / update_interval;
+	while(tf_position >= NUMBER_LEDS + segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100 + m_blurr_width +1){
+		tf_position -= segment_width + (uint32_t)segment_dist*NUMBER_LEDS/100;
+	}
 }
 
 void reset_brightness_tear_f(){
-    tf_position = 0;
+	tf_position = 0;
 }
 
 uint8_t calculate_brightness_tear_f(uint16_t i){
-    if(i - 1 > tf_position){
-        return 0;
-    }
-    while(i + m_blurr_width + segment_width < tf_position){
-    	i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
-    }
-    if(i > tf_position + 1){
-        return 0;
-    }
-    //fade in
-    if(i > tf_position){
-    	return 255-(uint8_t)(255*(i-tf_position));
-    }
-    if(i + segment_width - 1 >= tf_position){
-    	return 255;
-    }
-    //left blurr
-    else{
-    	return 255-(uint8_t)(255*(tf_position-(i+segment_width-1))/(m_blurr_width+1));
-    }
+	if(i - 1 > tf_position){
+		return 0;
+	}
+	while(i + m_blurr_width + segment_width < tf_position){
+		i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
+	}
+	if(i > tf_position + 1){
+		return 0;
+	}
+	//fade in
+	if(i > tf_position){
+		return 255-(uint8_t)(255*(i-tf_position));
+	}
+	if(i + segment_width - 1 >= tf_position){
+		return 255;
+	}
+	//left blurr
+	else{
+		return 255-(uint8_t)(255*(tf_position-(i+segment_width-1))/(m_blurr_width+1));
+	}
 }
 
 
@@ -785,67 +785,67 @@ float tfb_position = 0;
 uint8_t tfb_mode = 0; //0=forward; 1=backwawrd
 
 void update_brightness_tear_fb(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    if(tfb_mode == 0){
+	if(update_interval == 0){
+		return;
+	}
+	if(tfb_mode == 0){
 		tfb_position += (float)time_diff / update_interval;
-        if(tfb_position > NUMBER_LEDS + segment_width + m_blurr_width + 1){
-            tfb_mode = 1;
-            tfb_position = 2*NUMBER_LEDS + segment_width + m_blurr_width + 2 - tfb_position;
-        }
-    }
-    else{
+		if(tfb_position > NUMBER_LEDS + segment_width + m_blurr_width + 1){
+			tfb_mode = 1;
+			tfb_position = 2*NUMBER_LEDS + segment_width + m_blurr_width + 2 - tfb_position;
+		}
+	}
+	else{
 		tfb_position -= (float)time_diff / update_interval;
-        if(tfb_position < -segment_width - m_blurr_width - 1){
-            tfb_mode = 0;
-            tfb_position = -tfb_position - segment_width - m_blurr_width - 2;
-        }
-    }
+		if(tfb_position < -segment_width - m_blurr_width - 1){
+			tfb_mode = 0;
+			tfb_position = -tfb_position - segment_width - m_blurr_width - 2;
+		}
+	}
 }
 
 void reset_brightness_tear_fb(){
-    tfb_position = 0;
-    tfb_mode = 0;
+	tfb_position = 0;
+	tfb_mode = 0;
 }
 
 uint8_t calculate_brightness_tear_fb(uint16_t i){
-    if(i - m_blurr_width - 1 > tfb_position){
-        return 0;
-    }
-    while(i + m_blurr_width + segment_width < tfb_position){
-    	i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
-    }
-    if(i > tfb_position + m_blurr_width + 1){
-        return 0;
-    }
-    //right blurr
-    if(i > tfb_position){
-    	if(tfb_mode == 1){
+	if(i - m_blurr_width - 1 > tfb_position){
+		return 0;
+	}
+	while(i + m_blurr_width + segment_width < tfb_position){
+		i += segment_width + (uint32_t) segment_dist*NUMBER_LEDS/100;
+	}
+	if(i > tfb_position + m_blurr_width + 1){
+		return 0;
+	}
+	//right blurr
+	if(i > tfb_position){
+		if(tfb_mode == 1){
 			return 255-(uint8_t)(255*(i-tfb_position)/(m_blurr_width+1));
-    	}
-    	else if(i - 1 < tfb_position){
-    		return 255 - (uint8_t)((i-tfb_position)*255);
-    	}
-    	else{
-    		return 0;
-    	}
-    }
-    if(i + segment_width - 1 >= tfb_position){
-    	return 255;
-    }
-    //left blurr
-    else{
-    	if(tfb_mode == 0){
+		}
+		else if(i - 1 < tfb_position){
+			return 255 - (uint8_t)((i-tfb_position)*255);
+		}
+		else{
+			return 0;
+		}
+	}
+	if(i + segment_width - 1 >= tfb_position){
+		return 255;
+	}
+	//left blurr
+	else{
+		if(tfb_mode == 0){
 			return 255-(uint8_t)(255*(tfb_position-(i+segment_width-1))/(m_blurr_width+1));
-    	}
-    	else if(i + segment_width > tfb_position){
-    		return 255 - (uint8_t)((tfb_position-i-segment_width+1)*255);
-    	}
-    	else{
-    		return 0;
-    	}
-    }
+		}
+		else if(i + segment_width > tfb_position){
+			return 255 - (uint8_t)((tfb_position-i-segment_width+1)*255);
+		}
+		else{
+			return 0;
+		}
+	}
 }
 
 
@@ -860,28 +860,28 @@ int16_t f_time_to_change = 0;
 uint8_t f_state = 0;
 
 void update_brightness_flash(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    f_time_to_change -= time_diff;
-    if(f_time_to_change <= 0){
-        f_state = !f_state;
-        f_time_to_change += update_interval;
-    }
+	if(update_interval == 0){
+		return;
+	}
+	f_time_to_change -= time_diff;
+	if(f_time_to_change <= 0){
+		f_state = !f_state;
+		f_time_to_change += update_interval;
+	}
 }
 
 void reset_brightness_flash(){
-    f_time_to_change = 0;
-    f_state = 0;
+	f_time_to_change = 0;
+	f_state = 0;
 }
 
 uint8_t calculate_brightness_flash(uint16_t i){
-    if(f_state){
-        return 255;
-    }
-    else{
-        return 0;
-    }
+	if(f_state){
+		return 255;
+	}
+	else{
+		return 0;
+	}
 }
 
 
@@ -897,40 +897,40 @@ uint8_t g_direction = 0;		//0 = decreasing, >0 = increasing
 uint16_t g_time_passed = 0;
 
 void update_brightness_glow(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    g_time_passed += time_diff;
-    uint8_t diff = g_time_passed*4/update_interval;
-    g_time_passed = ((g_time_passed*4) % update_interval)/4;
-    if(g_direction){
-        if(255-g_intensity < diff){
-            g_direction = 0;
-            g_intensity = 255-(diff-(255-g_intensity));
-        }
-        else{
-            g_intensity += diff;
-        }
-    }
-    else{
-        if(g_intensity < diff){
-            g_direction = 1;
-            g_intensity = diff-g_intensity;
-        }
-        else{
-            g_intensity -= diff;
-        }
-    }
+	if(update_interval == 0){
+		return;
+	}
+	g_time_passed += time_diff;
+	uint8_t diff = g_time_passed*4/update_interval;
+	g_time_passed = ((g_time_passed*4) % update_interval)/4;
+	if(g_direction){
+		if(255-g_intensity < diff){
+			g_direction = 0;
+			g_intensity = 255-(diff-(255-g_intensity));
+		}
+		else{
+			g_intensity += diff;
+		}
+	}
+	else{
+		if(g_intensity < diff){
+			g_direction = 1;
+			g_intensity = diff-g_intensity;
+		}
+		else{
+			g_intensity -= diff;
+		}
+	}
 
 }
 
 void reset_brightness_glow(){
-    g_intensity = 255;
-    g_direction = 0;
+	g_intensity = 255;
+	g_direction = 0;
 }
 
 inline uint8_t calculate_brightness_glow(uint16_t i){
-    return g_intensity;
+	return g_intensity;
 }
 
 
@@ -951,75 +951,75 @@ uint16_t stars_time_passed = 0; //time passed since the last update
 uint8_t stars_sporn_time = 0;   //time passed since the last possibility of a star sporn
 
 uint8_t get_rand(){
-    static uint16_t lfsr = 0xACE1u;         /* Any nonzero start state will work. */
-    uint16_t bit;                    /* Must be 16bit to allow bit<<15 later in the code */
+	static uint16_t lfsr = 0xACE1u;         /* Any nonzero start state will work. */
+	uint16_t bit;                    /* Must be 16bit to allow bit<<15 later in the code */
 
-    for(uint8_t i = 0; i < 8; i++)
-    {
-        /* taps: 16 14 13 11; feedback polynomial: x^16 + x^14 + x^13 + x^11 + 1 */
-        bit  = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
-        lfsr =  (lfsr >> 1) | (bit << 15);
-    }
+	for(uint8_t i = 0; i < 8; i++)
+	{
+		/* taps: 16 14 13 11; feedback polynomial: x^16 + x^14 + x^13 + x^11 + 1 */
+		bit  = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
+		lfsr =  (lfsr >> 1) | (bit << 15);
+	}
 
-    return lfsr;
+	return lfsr;
 
 }
 
 void update_brightness_stars(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    stars_time_passed += time_diff;
-    uint8_t diff = (stars_time_passed/update_interval)*4;
-    stars_sporn_time += time_diff;
-    stars_time_passed = stars_time_passed % update_interval;
-    uint8_t sporn = 0;
-    if(stars_sporn_time >= STAR_SPORN_DIFF){
-        stars_sporn_time = stars_sporn_time % STAR_SPORN_DIFF;
-        sporn = get_rand() < stars_sporn_rate;
-    }
+	if(update_interval == 0){
+		return;
+	}
+	stars_time_passed += time_diff;
+	uint8_t diff = (stars_time_passed/update_interval)*4;
+	stars_sporn_time += time_diff;
+	stars_time_passed = stars_time_passed % update_interval;
+	uint8_t sporn = 0;
+	if(stars_sporn_time >= STAR_SPORN_DIFF){
+		stars_sporn_time = stars_sporn_time % STAR_SPORN_DIFF;
+		sporn = get_rand() < stars_sporn_rate;
+	}
 
-    //update all stars and eventually let a new one sporn
-    if(diff){
-        for(uint8_t i = 0; i < NUMBER_STARS; i++){
-            if(stars_brightness[i]){
-                if(stars_brightness[i] < diff){
-                    if(sporn){
-                        stars_brightness[i] = 255;
-                        stars_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
-                        sporn = 0;
-                    }
-                    else{
-                        stars_brightness[i] = 0;
-                    }
-                }
-                else{
-                    stars_brightness[i] -= diff;
-                }
-            }
-            else if(sporn){
-                stars_brightness[i] = 255;
-                stars_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
-                sporn = 0;
-            }
-        }
-    }
+	//update all stars and eventually let a new one sporn
+	if(diff){
+		for(uint8_t i = 0; i < NUMBER_STARS; i++){
+			if(stars_brightness[i]){
+				if(stars_brightness[i] < diff){
+					if(sporn){
+						stars_brightness[i] = 255;
+						stars_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
+						sporn = 0;
+					}
+					else{
+						stars_brightness[i] = 0;
+					}
+				}
+				else{
+					stars_brightness[i] -= diff;
+				}
+			}
+			else if(sporn){
+				stars_brightness[i] = 255;
+				stars_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
+				sporn = 0;
+			}
+		}
+	}
 }
 
 void reset_brightness_stars(){
-    stars_time_passed = 0;
-    for(uint8_t i = 0; i < NUMBER_STARS; i++){
-        stars_brightness[i] = 0;
-    }
+	stars_time_passed = 0;
+	for(uint8_t i = 0; i < NUMBER_STARS; i++){
+		stars_brightness[i] = 0;
+	}
 }
 
 uint8_t calculate_brightness_stars(uint16_t i){
-    for(uint8_t j = 0; j < NUMBER_STARS; j++){
-        if(i == stars_position[j]){
-            return stars_brightness[j];
-        }
-    }
-    return 0;
+	for(uint8_t j = 0; j < NUMBER_STARS; j++){
+		if(i == stars_position[j]){
+			return stars_brightness[j];
+		}
+	}
+	return 0;
 }
 
 
@@ -1035,7 +1035,7 @@ void update_brightness_steady(uint8_t time_diff){}
 void reset_brightness_steady(){}
 
 uint8_t calculate_brightness_steady(uint16_t i){
-    return 255;
+	return 255;
 }
 
 
@@ -1051,27 +1051,27 @@ void update_brightness_segment_4(uint8_t time_diff){}
 void reset_brightness_segment_4(){}
 
 uint8_t calculate_brightness_segment_4(uint16_t i){
-    if(i<NUMBER_LEDS/4){
-        if(segment_1==1||segment_2==1||segment_3==1||segment_4==1){
-            return 255;
-        }
-    }
-    else if(i < NUMBER_LEDS/2){
-        if(segment_1==2||segment_2==2||segment_3==2||segment_4==2){
-            return 255;
-        }
-    }
-    else if(i < (uint16_t)NUMBER_LEDS*3/4){
-        if(segment_1==3||segment_2==3||segment_3==3||segment_4==3){
-            return 255;
-        }
-    }
-    else{
-        if(segment_1==4||segment_2==4||segment_3==4||segment_4==4){
-            return 255;
-        }
-    }
-    return 0;
+	if(i<NUMBER_LEDS/4){
+		if(segment_1==1||segment_2==1||segment_3==1||segment_4==1){
+			return 255;
+		}
+	}
+	else if(i < NUMBER_LEDS/2){
+		if(segment_1==2||segment_2==2||segment_3==2||segment_4==2){
+			return 255;
+		}
+	}
+	else if(i < (uint16_t)NUMBER_LEDS*3/4){
+		if(segment_1==3||segment_2==3||segment_3==3||segment_4==3){
+			return 255;
+		}
+	}
+	else{
+		if(segment_1==4||segment_2==4||segment_3==4||segment_4==4){
+			return 255;
+		}
+	}
+	return 0;
 }
 
 
@@ -1087,47 +1087,47 @@ void update_brightness_segment_8(uint8_t time_diff){}
 void reset_brightness_segment_8(){}
 
 uint8_t calculate_brightness_segment_8(uint16_t i){
-    if(i<NUMBER_LEDS/8){
-        if(segment_1==1||segment_2==1||segment_3==1||segment_4==1){
-            return 255;
-        }
-    }
-    else if(i < NUMBER_LEDS/4){
-        if(segment_1==2||segment_2==2||segment_3==2||segment_4==2){
-            return 255;
-        }
-    }
-    else if(i < (uint16_t)NUMBER_LEDS*3/8){
-        if(segment_1==3||segment_2==3||segment_3==3||segment_4==3){
-            return 255;
-        }
-    }
-    else if(i < NUMBER_LEDS/2){
-        if(segment_1==4||segment_2==4||segment_3==4||segment_4==4){
-            return 255;
-        }
-    }
-    else if(i < (uint16_t)NUMBER_LEDS*5/8){
-        if(segment_1==5||segment_2==5||segment_3==5||segment_4==5){
-            return 255;
-        }
-    }
-    else if(i < (uint16_t)NUMBER_LEDS*3/4){
-        if(segment_1==6||segment_2==6||segment_3==6||segment_4==6){
-            return 255;
-        }
-    }
-    else if(i < (uint16_t)NUMBER_LEDS*7/8){
-        if(segment_1==7||segment_2==7||segment_3==7||segment_4==7){
-            return 255;
-        }
-    }
-    else{
-        if(segment_1==8||segment_2==8||segment_3==8||segment_4==8){
-            return 255;
-        }
-    }
-    return 0;
+	if(i<NUMBER_LEDS/8){
+		if(segment_1==1||segment_2==1||segment_3==1||segment_4==1){
+			return 255;
+		}
+	}
+	else if(i < NUMBER_LEDS/4){
+		if(segment_1==2||segment_2==2||segment_3==2||segment_4==2){
+			return 255;
+		}
+	}
+	else if(i < (uint16_t)NUMBER_LEDS*3/8){
+		if(segment_1==3||segment_2==3||segment_3==3||segment_4==3){
+			return 255;
+		}
+	}
+	else if(i < NUMBER_LEDS/2){
+		if(segment_1==4||segment_2==4||segment_3==4||segment_4==4){
+			return 255;
+		}
+	}
+	else if(i < (uint16_t)NUMBER_LEDS*5/8){
+		if(segment_1==5||segment_2==5||segment_3==5||segment_4==5){
+			return 255;
+		}
+	}
+	else if(i < (uint16_t)NUMBER_LEDS*3/4){
+		if(segment_1==6||segment_2==6||segment_3==6||segment_4==6){
+			return 255;
+		}
+	}
+	else if(i < (uint16_t)NUMBER_LEDS*7/8){
+		if(segment_1==7||segment_2==7||segment_3==7||segment_4==7){
+			return 255;
+		}
+	}
+	else{
+		if(segment_1==8||segment_2==8||segment_3==8||segment_4==8){
+			return 255;
+		}
+	}
+	return 0;
 }
 
 
@@ -1143,15 +1143,15 @@ void update_brightness_segment_custom(uint8_t time_diff){}
 void reset_brightness_segment_custom(){}
 
 inline uint8_t calculate_brightness_segment_custom(uint16_t i){
-    if(i >= (uint16_t)NUMBER_LEDS*segment_offset_1/100 &&
-            i < NUMBER_LEDS*((uint16_t)segment_offset_1+segment_1)/100){
-        return 255;
-    }
-    else if(i >= (uint16_t)NUMBER_LEDS*segment_offset_2/100 &&
-            i < NUMBER_LEDS*((uint16_t)segment_offset_2+segment_2)/100){
-        return 255;
-    }
-    return 0;
+	if(i >= (uint16_t)NUMBER_LEDS*segment_offset_1/100 &&
+			i < NUMBER_LEDS*((uint16_t)segment_offset_1+segment_1)/100){
+		return 255;
+	}
+	else if(i >= (uint16_t)NUMBER_LEDS*segment_offset_2/100 &&
+			i < NUMBER_LEDS*((uint16_t)segment_offset_2+segment_2)/100){
+		return 255;
+	}
+	return 0;
 }
 
 
@@ -1163,9 +1163,9 @@ inline uint8_t calculate_brightness_segment_custom(uint16_t i){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void update_brightness_random(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
+	if(update_interval == 0){
+		return;
+	}
 }
 
 void reset_brightness_random(){
@@ -1173,7 +1173,7 @@ void reset_brightness_random(){
 }
 
 uint8_t calculate_brightness_random(uint16_t i){
-    return 0;
+	return 0;
 }
 
 
@@ -1194,61 +1194,61 @@ uint16_t snow_time_passed = 0; //time passed since the last update
 uint8_t snow_sporn_time = 0;   //time passed since the last possibility of a star sporn
 
 void update_brightness_snow(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    snow_time_passed += time_diff;
-    uint8_t diff = (uint16_t)snow_time_passed*255/update_interval;
-    snow_sporn_time += time_diff;
-    snow_time_passed = ((uint16_t)snow_time_passed*255 % update_interval)/255;
-    uint8_t sporn = 0;
-    if(snow_sporn_time >= SNOW_SPORN_DIFF){
-        snow_sporn_time = snow_sporn_time % SNOW_SPORN_DIFF;
-        sporn = get_rand() < snow_sporn_rate;
-    }
+	if(update_interval == 0){
+		return;
+	}
+	snow_time_passed += time_diff;
+	uint8_t diff = (uint16_t)snow_time_passed*255/update_interval;
+	snow_sporn_time += time_diff;
+	snow_time_passed = ((uint16_t)snow_time_passed*255 % update_interval)/255;
+	uint8_t sporn = 0;
+	if(snow_sporn_time >= SNOW_SPORN_DIFF){
+		snow_sporn_time = snow_sporn_time % SNOW_SPORN_DIFF;
+		sporn = get_rand() < snow_sporn_rate;
+	}
 
-    //update all snow flakes and eventually let a new one sporn
-    if(diff){
-        for(uint8_t i = 0; i < NUMBER_STARS; i++){
-            if(snow_brightness[i]){
-                if(snow_brightness[i] < diff){
-                    if(sporn){
-                        snow_brightness[i] = 255;
-                        snow_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
-                        sporn = 0;
-                    }
-                    else{
-                        snow_brightness[i] = 0;
-                    }
-                }
-                else{
-                    snow_brightness[i] -= diff;
-                }
-            }
-            else if(sporn){
-                snow_brightness[i] = 255;
-                snow_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
-                sporn = 0;
-            }
-        }
-    }
+	//update all snow flakes and eventually let a new one sporn
+	if(diff){
+		for(uint8_t i = 0; i < NUMBER_STARS; i++){
+			if(snow_brightness[i]){
+				if(snow_brightness[i] < diff){
+					if(sporn){
+						snow_brightness[i] = 255;
+						snow_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
+						sporn = 0;
+					}
+					else{
+						snow_brightness[i] = 0;
+					}
+				}
+				else{
+					snow_brightness[i] -= diff;
+				}
+			}
+			else if(sporn){
+				snow_brightness[i] = 255;
+				snow_position[i] = (((uint32_t)get_rand())<<8|get_rand())*NUMBER_LEDS/0xFFFF;
+				sporn = 0;
+			}
+		}
+	}
 }
 
 void reset_brightness_snow(){
-    snow_time_passed = 0;
-    for(uint8_t i = 0; i < NUMBER_STARS; i++){
-        snow_brightness[i] = 0;
-    }
+	snow_time_passed = 0;
+	for(uint8_t i = 0; i < NUMBER_STARS; i++){
+		snow_brightness[i] = 0;
+	}
 }
 
 #define SNOW_LOW_LEVEL	254
 uint8_t calculate_brightness_snow(uint16_t i){
-    for(uint8_t j = 0; j < NUMBER_STARS; j++){
-        if(i == snow_position[j] && snow_brightness[j] > 0){
-            return 255;
-        }
-    }
-    return SNOW_LOW_LEVEL;
+	for(uint8_t j = 0; j < NUMBER_STARS; j++){
+		if(i == snow_position[j] && snow_brightness[j] > 0){
+			return 255;
+		}
+	}
+	return SNOW_LOW_LEVEL;
 }
 
 
@@ -1259,86 +1259,86 @@ uint8_t calculate_brightness_snow(uint16_t i){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void update_color(uint8_t time_passed){
-    switch(current_color_mode) {
-    case c_steady:
-        update_color_steady(time_passed);
-        break;
-    case c_fade_all:
-        update_color_fade_all(time_passed);
-        break;
-    case c_switch_all:
-        update_color_switch_all(time_passed);
-        break;
-    case c_fade_3:
-        update_color_fade_3(time_passed);
-        break;
-    case c_switch_3:
-        update_color_switch_3(time_passed);
-        break;
-    case c_rainbow:
-        update_color_rainbow(time_passed);
-        break;
-    case c_rainbow_chase_f:
-        update_color_rainbow_chase_f(time_passed);
-        break;
-    case c_rainbow_chase_b:
-        update_color_rainbow_chase_b(time_passed);
-        break;
-    case c_snow_steady:
-        update_color_snow_steady(time_passed);
-        break;
-    case c_snow_rainbow:
-        update_color_snow_rainbow(time_passed);
-        break;
-    }
+	switch(current_color_mode) {
+	case c_steady:
+		update_color_steady(time_passed);
+		break;
+	case c_fade_all:
+		update_color_fade_all(time_passed);
+		break;
+	case c_switch_all:
+		update_color_switch_all(time_passed);
+		break;
+	case c_fade_3:
+		update_color_fade_3(time_passed);
+		break;
+	case c_switch_3:
+		update_color_switch_3(time_passed);
+		break;
+	case c_rainbow:
+		update_color_rainbow(time_passed);
+		break;
+	case c_rainbow_chase_f:
+		update_color_rainbow_chase_f(time_passed);
+		break;
+	case c_rainbow_chase_b:
+		update_color_rainbow_chase_b(time_passed);
+		break;
+	case c_snow_steady:
+		update_color_snow_steady(time_passed);
+		break;
+	case c_snow_rainbow:
+		update_color_snow_rainbow(time_passed);
+		break;
+	}
 }
 
 void reset_color(){
-    reset_color_steady();
-    reset_color_fade_all();
-    reset_color_switch_all();
-    reset_color_fade_3();
-    reset_color_switch_3();
-    reset_color_rainbow();
-    reset_color_rainbow_chase_f();
-    reset_color_rainbow_chase_b();
-    reset_color_snow_steady();
-    reset_color_snow_rainbow();
+	reset_color_steady();
+	reset_color_fade_all();
+	reset_color_switch_all();
+	reset_color_fade_3();
+	reset_color_switch_3();
+	reset_color_rainbow();
+	reset_color_rainbow_chase_f();
+	reset_color_rainbow_chase_b();
+	reset_color_snow_steady();
+	reset_color_snow_rainbow();
 }
 
 void calculate_color(uint8_t* address, uint16_t i, uint8_t brightness){
-    switch(current_color_mode) {
-    case c_steady:
-        calculate_color_steady(address, i, brightness);
-        break;
-    case c_fade_all:
-        calculate_color_fade_all(address, i, brightness);
-        break;
-    case c_switch_all:
-        calculate_color_switch_all(address, i, brightness);
-        break;
-    case c_fade_3:
-        calculate_color_fade_3(address, i, brightness);
-        break;
-    case c_switch_3:
-        calculate_color_switch_3(address, i, brightness);
-        break;
-    case c_rainbow:
-        calculate_color_rainbow(address, i, brightness);
-        break;
-    case c_rainbow_chase_f:
-        calculate_color_rainbow_chase_f(address, i, brightness);
-        break;
-    case c_rainbow_chase_b:
-        calculate_color_rainbow_chase_b(address, i, brightness);
-        break;
-    case c_snow_steady:
-    	calculate_color_snow_steady(address, i, brightness);
-    	break;
-    case c_snow_rainbow:
-    	calculate_color_snow_rainbow(address, i, brightness);
-    	break;
-    }
+	switch(current_color_mode) {
+	case c_steady:
+		calculate_color_steady(address, i, brightness);
+		break;
+	case c_fade_all:
+		calculate_color_fade_all(address, i, brightness);
+		break;
+	case c_switch_all:
+		calculate_color_switch_all(address, i, brightness);
+		break;
+	case c_fade_3:
+		calculate_color_fade_3(address, i, brightness);
+		break;
+	case c_switch_3:
+		calculate_color_switch_3(address, i, brightness);
+		break;
+	case c_rainbow:
+		calculate_color_rainbow(address, i, brightness);
+		break;
+	case c_rainbow_chase_f:
+		calculate_color_rainbow_chase_f(address, i, brightness);
+		break;
+	case c_rainbow_chase_b:
+		calculate_color_rainbow_chase_b(address, i, brightness);
+		break;
+	case c_snow_steady:
+		calculate_color_snow_steady(address, i, brightness);
+		break;
+	case c_snow_rainbow:
+		calculate_color_snow_rainbow(address, i, brightness);
+		break;
+	}
 }
 
 void efg_color_set_mode(uint8_t mode){
@@ -1417,17 +1417,17 @@ inline uint8_t efg_get_blue(){
 
 inline void write_color(uint8_t* address, uint8_t r, uint8_t g, uint8_t b){
 #ifdef WS2811
-    *(address++) = b;
-    *(address++) = r;
-    *address = g;
+*(address++) = b;
+*(address++) = r;
+*address = g;
 #elif defined WS2812
-    *(address++) = g;
-    *(address++) = r;
-    *address = b;
+*(address++) = g;
+*(address++) = r;
+*address = b;
 #else
-    *(address++) = g;
-    *(address++) = r;
-    *address = b;
+	*(address++) = g;
+*(address++) = r;
+*address = b;
 #endif
 }
 
@@ -1444,9 +1444,9 @@ inline void write_color(uint8_t* address, uint8_t r, uint8_t g, uint8_t b){
 //} hsv_double;
 
 typedef struct {
-    uint8_t r;       // a fraction between 0 and 1
-    uint8_t g;       // a fraction between 0 and 1
-    uint8_t b;       // a fraction between 0 and 1
+	uint8_t r;       // a fraction between 0 and 1
+	uint8_t g;       // a fraction between 0 and 1
+	uint8_t b;       // a fraction between 0 and 1
 } rgb;
 
 //typedef struct {
@@ -1585,17 +1585,17 @@ typedef struct {
 
 rgb rgb_table_rainbow[] = {{255,0,0}, {255,179,0}, {255,255,0}, {180,255,0}, /*{0,255,0},*/ {0,255,255}, {0,160,255}, {40,0,255}, {255,0,255}, {255,0,0}, {255,0,150}, {255,0,0}};
 void compute_rgb_rainbow(uint8_t * rp, uint8_t * gp, uint8_t * bp, uint8_t t) {
-  // t in the range 0..255 (for convenience)
-  int segment = t>>5; // 0..7
-//  uint8_t segment = t/25;
-  int delta = t&31;
-//  uint8_t delta = t%25;
-  uint8_t a=rgb_table_rainbow[segment].r, b=rgb_table_rainbow[segment+1].r;
-  *rp = a + ((delta*(b-a))>>5);
-  a=rgb_table_rainbow[segment].g; b=rgb_table_rainbow[segment+1].g;
-  *gp = a + ((delta*(b-a))>>5);
-  a=rgb_table_rainbow[segment].b; b=rgb_table_rainbow[segment+1].b;
-  *bp = a + ((delta*(b-a))>>5);
+	// t in the range 0..255 (for convenience)
+	int segment = t>>5; // 0..7
+	//  uint8_t segment = t/25;
+	int delta = t&31;
+	//  uint8_t delta = t%25;
+	uint8_t a=rgb_table_rainbow[segment].r, b=rgb_table_rainbow[segment+1].r;
+	*rp = a + ((delta*(b-a))>>5);
+	a=rgb_table_rainbow[segment].g; b=rgb_table_rainbow[segment+1].g;
+	*gp = a + ((delta*(b-a))>>5);
+	a=rgb_table_rainbow[segment].b; b=rgb_table_rainbow[segment+1].b;
+	*bp = a + ((delta*(b-a))>>5);
 }
 
 
@@ -1610,9 +1610,9 @@ void update_color_steady(uint8_t time_diff){}
 void reset_color_steady(){}
 
 void calculate_color_steady(uint8_t* address, uint16_t i, uint8_t brightness){
-    write_color(address, (uint8_t)((uint16_t)brightness*r_value/255), \
-            (uint8_t)((uint16_t)brightness*g_value/255), \
-            (uint8_t)((uint16_t)brightness*b_value/255));
+	write_color(address, (uint8_t)((uint16_t)brightness*r_value/255), \
+			(uint8_t)((uint16_t)brightness*g_value/255), \
+			(uint8_t)((uint16_t)brightness*b_value/255));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1625,28 +1625,28 @@ uint8_t cfa_color = 0;
 uint16_t cfa_time_passed = 0;
 
 void update_color_fade_all(uint8_t time_diff){
-    if(c_update_interval == 0){
-        return;
-    }
-    cfa_time_passed += time_diff;
-    uint8_t diff = cfa_time_passed*4/c_update_interval;
-    cfa_time_passed = ((cfa_time_passed*4)%c_update_interval)/4;
-    cfa_color += diff;
+	if(c_update_interval == 0){
+		return;
+	}
+	cfa_time_passed += time_diff;
+	uint8_t diff = cfa_time_passed*4/c_update_interval;
+	cfa_time_passed = ((cfa_time_passed*4)%c_update_interval)/4;
+	cfa_color += diff;
 }
 
 void reset_color_fade_all(){
-    cfa_time_passed = 0;
-    cfa_color = 0;
+	cfa_time_passed = 0;
+	cfa_color = 0;
 }
 
 void calculate_color_fade_all(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    compute_rgb_rainbow(&r, &g, &b, cfa_color);
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+	uint8_t r, g, b;
+	compute_rgb_rainbow(&r, &g, &b, cfa_color);
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1659,29 +1659,29 @@ uint16_t csa_time_passed = 0;
 uint8_t csa_index = 0;
 
 void update_color_switch_all(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    csa_time_passed += time_diff;
-    csa_index = (csa_index + csa_time_passed/c_update_interval)%8;
-    csa_time_passed = csa_time_passed % c_update_interval;
+	if(update_interval == 0){
+		return;
+	}
+	csa_time_passed += time_diff;
+	csa_index = (csa_index + csa_time_passed/c_update_interval)%8;
+	csa_time_passed = csa_time_passed % c_update_interval;
 }
 
 void reset_color_switch_all(){
-    csa_time_passed = 0;
-    csa_index = 0;
+	csa_time_passed = 0;
+	csa_index = 0;
 }
 
 void calculate_color_switch_all(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    r = rgb_table_rainbow[csa_index].r;
-    g = rgb_table_rainbow[csa_index].g;
-    b = rgb_table_rainbow[csa_index].b;
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+	uint8_t r, g, b;
+	r = rgb_table_rainbow[csa_index].r;
+	g = rgb_table_rainbow[csa_index].g;
+	b = rgb_table_rainbow[csa_index].b;
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 
@@ -1692,68 +1692,68 @@ void calculate_color_switch_all(uint8_t* address, uint16_t i, uint8_t brightness
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t cf3_index = 0;  //0=red fading in; 1=red fading out; 2=green fading in; 3=green fading out;
-                        //4=blue fading in; 5=blue fading out
+//4=blue fading in; 5=blue fading out
 uint8_t cf3_value = 0;
 uint16_t cf3_time_passed = 0;
 
 void update_color_fade_3(uint8_t time_diff){
-    if(c_update_interval == 0){
-        return;
-    }
-    cf3_time_passed += time_diff;
-    uint8_t diff = (cf3_time_passed / c_update_interval)*4;
-    cf3_time_passed = cf3_time_passed % c_update_interval;
-    if(cf3_index == 0 || cf3_index == 2 || cf3_index == 4){
-        if(diff > 255-cf3_value){
-            cf3_value = 255-(diff-(255-cf3_value));
-            cf3_index++;
-        }
-        else{
-            cf3_value += diff;
-        }
-    }
-    else{
-        if(diff > cf3_value){
-            cf3_value = diff-cf3_value;
-            cf3_index = (cf3_index+1) % 6;
-        }
-        else{
-            cf3_value -= diff;
-        }
-    }
+	if(c_update_interval == 0){
+		return;
+	}
+	cf3_time_passed += time_diff;
+	uint8_t diff = (cf3_time_passed / c_update_interval)*4;
+	cf3_time_passed = cf3_time_passed % c_update_interval;
+	if(cf3_index == 0 || cf3_index == 2 || cf3_index == 4){
+		if(diff > 255-cf3_value){
+			cf3_value = 255-(diff-(255-cf3_value));
+			cf3_index++;
+		}
+		else{
+			cf3_value += diff;
+		}
+	}
+	else{
+		if(diff > cf3_value){
+			cf3_value = diff-cf3_value;
+			cf3_index = (cf3_index+1) % 6;
+		}
+		else{
+			cf3_value -= diff;
+		}
+	}
 }
 
 void reset_color_fade_3(){
-    cf3_index = 0;
-    cf3_value = 0;
-    cf3_time_passed = 0;
+	cf3_index = 0;
+	cf3_value = 0;
+	cf3_time_passed = 0;
 }
 
 void calculate_color_fade_3(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    r = g = b = 0;
-    switch (cf3_index) {
-    case 0:
-    case 1:
-        r = cf3_value;
-        break;
-    case 2:
-    case 3:
-        g = cf3_value;
-        break;
-    case 4:
-    case 5:
-        b = cf3_value;
-        break;
-    default:
-        cf3_index = 0;
-        break;
-    }
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+	uint8_t r, g, b;
+	r = g = b = 0;
+	switch (cf3_index) {
+	case 0:
+	case 1:
+		r = cf3_value;
+		break;
+	case 2:
+	case 3:
+		g = cf3_value;
+		break;
+	case 4:
+	case 5:
+		b = cf3_value;
+		break;
+	default:
+		cf3_index = 0;
+		break;
+	}
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 
@@ -1767,41 +1767,41 @@ uint8_t cs3_index = 0;
 uint16_t cs3_time_passed = 0;
 
 void update_color_switch_3(uint8_t time_diff){
-    if(update_interval == 0){
-        return;
-    }
-    cs3_time_passed += time_diff;
-    cs3_index = (cs3_index + cs3_time_passed/c_update_interval)%3;
-    cs3_time_passed = cs3_time_passed % c_update_interval;
+	if(update_interval == 0){
+		return;
+	}
+	cs3_time_passed += time_diff;
+	cs3_index = (cs3_index + cs3_time_passed/c_update_interval)%3;
+	cs3_time_passed = cs3_time_passed % c_update_interval;
 }
 
 void reset_color_switch_3(){
-    cs3_index = 0;
-    cs3_time_passed = 0;
+	cs3_index = 0;
+	cs3_time_passed = 0;
 }
 
 void calculate_color_switch_3(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    r = g = b = 0;
-    switch (cs3_index) {
-    case 0:
-        r = 255;
-        break;
-    case 1:
-        g = 255;
-        break;
-    case 2:
-        b = 255;
-        break;
-    default:
-        cs3_index = 0;
-        break;
-    }
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+	uint8_t r, g, b;
+	r = g = b = 0;
+	switch (cs3_index) {
+	case 0:
+		r = 255;
+		break;
+	case 1:
+		g = 255;
+		break;
+	case 2:
+		b = 255;
+		break;
+	default:
+		cs3_index = 0;
+		break;
+	}
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 
@@ -1820,26 +1820,26 @@ void reset_color_rainbow(){
 }
 
 void calculate_color_rainbow(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    if(c_segment_width == 0){
-        r = 255;
-        b = g = 0;
-    }
-    else{
-    	uint8_t divider = NUMBER_LEDS*c_segment_width/100;
-    	if(divider){
+	uint8_t r, g, b;
+	if(c_segment_width == 0){
+		r = 255;
+		b = g = 0;
+	}
+	else{
+		uint8_t divider = NUMBER_LEDS*c_segment_width/100;
+		if(divider){
 			compute_rgb_rainbow(&r, &g, &b, i*255/divider);
-    	}
-    	else{
-    		r = 255;
-    		b = g = 0;
-    	}
-    }
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+		}
+		else{
+			r = 255;
+			b = g = 0;
+		}
+	}
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 
@@ -1853,49 +1853,49 @@ uint8_t crcf_color_offset = 0;
 float crcf_time_passed = 0;
 
 void update_color_rainbow_chase_f(uint8_t time_diff){
-    if(c_update_interval == 0){
-        return;
-    }
-    crcf_time_passed += time_diff;
-    if(c_segment_width != 0){
-    	uint8_t divider = NUMBER_LEDS*c_segment_width/100;
-    	if(divider){
+	if(c_update_interval == 0){
+		return;
+	}
+	crcf_time_passed += time_diff;
+	if(c_segment_width != 0){
+		uint8_t divider = NUMBER_LEDS*c_segment_width/100;
+		if(divider){
 			uint8_t diff = crcf_time_passed/c_update_interval*255/divider;
 			crcf_color_offset -= diff;
 			crcf_time_passed -= (float)diff*c_update_interval/255*(NUMBER_LEDS*c_segment_width/100);
-    	}
-    	else{
-    		return;
-    	}
-    }
+		}
+		else{
+			return;
+		}
+	}
 }
 
 void reset_color_rainbow_chase_f(){
-    crcf_color_offset = 0;
-    crcf_time_passed = 0;
+	crcf_color_offset = 0;
+	crcf_time_passed = 0;
 }
 
 void calculate_color_rainbow_chase_f(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    if(c_segment_width == 0){
-        r = 255;
-        b = g = 0;
-    }
-    else{
-    	uint8_t divider = NUMBER_LEDS*c_segment_width/100;
-    	if(divider){
+	uint8_t r, g, b;
+	if(c_segment_width == 0){
+		r = 255;
+		b = g = 0;
+	}
+	else{
+		uint8_t divider = NUMBER_LEDS*c_segment_width/100;
+		if(divider){
 			compute_rgb_rainbow(&r, &g, &b, i*255/divider + crcf_color_offset);
-    	}
-    	else{
-    		r = 255;
-    		b = g = 0;
-    	}
-    }
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+		}
+		else{
+			r = 255;
+			b = g = 0;
+		}
+	}
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 
@@ -1909,49 +1909,49 @@ uint8_t crcb_color_offset = 0;
 float crcb_time_passed = 0;
 
 void update_color_rainbow_chase_b(uint8_t time_diff){
-    if(c_update_interval == 0){
-        return;
-    }
-    crcb_time_passed += time_diff;
-    if(c_segment_width != 0){
-    	uint8_t divider = NUMBER_LEDS*c_segment_width/100;
-    	if(divider){
+	if(c_update_interval == 0){
+		return;
+	}
+	crcb_time_passed += time_diff;
+	if(c_segment_width != 0){
+		uint8_t divider = NUMBER_LEDS*c_segment_width/100;
+		if(divider){
 			uint8_t diff = crcb_time_passed/c_update_interval*255/divider;
 			crcb_color_offset += diff;
 			crcb_time_passed -= (float)diff*c_update_interval/255*divider;
-    	}
-    	else{
-    		return;
-    	}
-    }
+		}
+		else{
+			return;
+		}
+	}
 }
 
 void reset_color_rainbow_chase_b(){
-    crcb_color_offset = 0;
-    crcb_time_passed = 0;
+	crcb_color_offset = 0;
+	crcb_time_passed = 0;
 }
 
 void calculate_color_rainbow_chase_b(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    if(c_segment_width == 0){
-        r = 255;
-        b = g = 0;
-    }
-    else{
-    	uint8_t divider = NUMBER_LEDS*c_segment_width/100;
-    	if(divider){
+	uint8_t r, g, b;
+	if(c_segment_width == 0){
+		r = 255;
+		b = g = 0;
+	}
+	else{
+		uint8_t divider = NUMBER_LEDS*c_segment_width/100;
+		if(divider){
 			compute_rgb_rainbow(&r, &g, &b, i*255/divider + crcb_color_offset);
-    	}
-    	else{
-    		r = 255;
-    		b = g = 0;
-    	}
-    }
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    write_color(address, r, g, b);
+		}
+		else{
+			r = 255;
+			b = g = 0;
+		}
+	}
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	write_color(address, r, g, b);
 }
 
 
@@ -1993,24 +1993,24 @@ void reset_color_snow_rainbow(){
 }
 
 void calculate_color_snow_rainbow(uint8_t* address, uint16_t i, uint8_t brightness){
-    uint8_t r, g, b;
-    if(c_segment_width == 0){
-        r = 255;
-        b = g = 0;
-    }
-    else{
-        compute_rgb_rainbow(&r, &g, &b, i*255/(NUMBER_LEDS*c_segment_width/100));
-    }
-    uint8_t factor = (uint16_t)brightness*val_value/255;
-    r = (uint16_t)r*factor/255;
-    g = (uint16_t)g*factor/255;
-    b = (uint16_t)b*factor/255;
-    if(brightness != 255){
+	uint8_t r, g, b;
+	if(c_segment_width == 0){
+		r = 255;
+		b = g = 0;
+	}
+	else{
+		compute_rgb_rainbow(&r, &g, &b, i*255/(NUMBER_LEDS*c_segment_width/100));
+	}
+	uint8_t factor = (uint16_t)brightness*val_value/255;
+	r = (uint16_t)r*factor/255;
+	g = (uint16_t)g*factor/255;
+	b = (uint16_t)b*factor/255;
+	if(brightness != 255){
 		write_color(address, r, g, b);
-    }
-    else{
-    	write_color(address, val_value, val_value, val_value);
-    }
+	}
+	else{
+		write_color(address, val_value, val_value, val_value);
+	}
 }
 
 

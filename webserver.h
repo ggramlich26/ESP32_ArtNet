@@ -13,7 +13,6 @@ extern "C" {
 #endif
 
 void webserver_init();
-void webserver_stop();
 
 #ifdef __cplusplus
 } // extern "C"

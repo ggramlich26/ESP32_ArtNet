@@ -177,7 +177,7 @@ extern "C" {
 
 
 enum strip_mode{ws2812,
-				rgb};
+	rgb};
 
 void dmx_decode(uint8_t *data, uint8_t strip_mode);
 

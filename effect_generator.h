@@ -122,35 +122,35 @@ void calculate_color_snow_steady(uint8_t*, uint16_t, uint8_t);
 void calculate_color_snow_rainbow(uint8_t*, uint16_t, uint8_t);
 
 enum motion_effects {m_steady,
-                    m_chase_f,
-                    m_chase_b,
-                    m_chase_cross,
-                    m_chase_meet,
-                    m_chase_blurr_f,
-                    m_chase_blurr_fb,
-                    m_tear_f,
-                    m_tear_fb,
-                    m_flash,
-                    m_glow,
-                    m_stars,
-                    m_segment_4,
-                    m_segment_8,
-                    m_segment_custom,
-                    m_random,
-					m_snow
+	m_chase_f,
+	m_chase_b,
+	m_chase_cross,
+	m_chase_meet,
+	m_chase_blurr_f,
+	m_chase_blurr_fb,
+	m_tear_f,
+	m_tear_fb,
+	m_flash,
+	m_glow,
+	m_stars,
+	m_segment_4,
+	m_segment_8,
+	m_segment_custom,
+	m_random,
+	m_snow
 };
 
 enum color_effects {
-                    c_steady,
-                    c_fade_all,
-                    c_switch_all,
-                    c_fade_3,
-                    c_switch_3,
-                    c_rainbow,
-                    c_rainbow_chase_f,
-                    c_rainbow_chase_b,
-					c_snow_steady,
-					c_snow_rainbow
+	c_steady,
+	c_fade_all,
+	c_switch_all,
+	c_fade_3,
+	c_switch_3,
+	c_rainbow,
+	c_rainbow_chase_f,
+	c_rainbow_chase_b,
+	c_snow_steady,
+	c_snow_rainbow
 };
 
 void efg_set_current_motion(uint8_t);

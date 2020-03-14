@@ -36,7 +36,7 @@ void initTest();
 uint32_t calculateWIFIChecksum();
 
 #define ADDR_SWITCH		0b10000000
-#define UNIVERSE_SWITCH	0b01110011
+#define UNIVERSE_SWITCH	0b01000000
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //																											//
@@ -87,10 +87,13 @@ uint32_t calculateWIFIChecksum();
 #define SSID_ADDR			0
 #define WIFI_PW_MAX_LEN		30
 #define WIFI_PW_ADDR		31
-#define CHECKSUM_ADDR		62
+#define	HOST_NAME_MAX_LEN	30
+#define	HOST_NAME_ADDR		62
+#define CHECKSUM_ADDR		93
 #define	CHECKSUM_LEN		4
 char ssid[SSID_MAX_LEN+1];
 char password[WIFI_PW_MAX_LEN+1];
+char hostName[HOST_NAME_MAX_LEN+1];
 
 uint8_t wifi_initialized = 0;
 uint8_t wifi_ap = 0;
@@ -105,7 +108,7 @@ void setup()
 {
 	//  nvs_flash_init();
 	ws2812_init(ws2812_pin);
-	EEPROM.begin(SSID_MAX_LEN+1+WIFI_PW_MAX_LEN+1+CHECKSUM_LEN);
+	EEPROM.begin(SSID_MAX_LEN+1+WIFI_PW_MAX_LEN+1+HOST_NAME_MAX_LEN+1+CHECKSUM_LEN);
 
 	Serial.begin(115200);
 
@@ -121,6 +124,9 @@ void setup()
 	}
 	for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
 		password[i] = EEPROM.read(WIFI_PW_ADDR+i);
+	}
+	for(uint8_t i = 0; i < HOST_NAME_MAX_LEN+1; i++){
+		hostName[i] = EEPROM.read(HOST_NAME_ADDR+i);
 	}
 	uint32_t checksum = 0;
 	for(uint8_t i = 0; i < CHECKSUM_LEN; i++){
@@ -143,6 +149,15 @@ void setup()
 			EEPROM.write(WIFI_PW_ADDR + i, default_pw[i]);
 			password[i] = default_pw[i];
 			if(default_pw[i] == '\0'){
+				break;
+			}
+		}
+		//copy default host name to EEPROM and to the hostName variable
+		const char* default_host_name = DEFAULT_HOST_NAME;
+		for(uint8_t i = 0; i < HOST_NAME_MAX_LEN+1; i++){
+			EEPROM.write(HOST_NAME_ADDR + i, default_host_name[i]);
+			hostName[i] = default_host_name[i];
+			if(default_host_name[i] == '\0'){
 				break;
 			}
 		}
@@ -622,7 +637,7 @@ void updateEffectMode(){
 void initWifi(){
 	if(!(getEffectMode()>>15)){
 		WiFi.begin(ssid, password);
-		WiFi.setHostname(HOST_NAME);
+		WiFi.setHostname(hostName);
 		while (WiFi.status() != WL_CONNECTED) {
 			delay(250);
 			Serial.print(".");
@@ -659,7 +674,7 @@ void initWifi(){
 	webserver_init();
 }
 
-String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword){
+String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword, const char* newHostName){
 	if(currentPassword == NULL || strcmp(currentPassword, password) != 0){
 		return "Setting WIFI credentials failed. Wrong password.";
 	}
@@ -677,6 +692,15 @@ String changeWifi(const char* currentPassword, const char* newSSID, const char* 
 			EEPROM.write(WIFI_PW_ADDR + i, newPassword[i]);
 			password[i] = newPassword[i];
 			if(newPassword[i] == '\0'){
+				break;
+			}
+		}
+	}
+	if(newHostName != NULL && strcmp(newHostName, "") != 0){
+		for(uint8_t i = 0; i < HOST_NAME_MAX_LEN+1; i++){
+			EEPROM.write(HOST_NAME_ADDR + i, newHostName[i]);
+			hostName[i] = newHostName[i];
+			if(newHostName[i] == '\0'){
 				break;
 			}
 		}
@@ -702,6 +726,12 @@ uint32_t calculateWIFIChecksum(){
 	for(uint8_t i = 0, j = 0; i < WIFI_PW_MAX_LEN+1; i++, j = (j+1)%CHECKSUM_LEN){
 		res ^= ((uint32_t)(password[i])<<(8*j));
 		if(password[i] == '\0'){
+			break;
+		}
+	}
+	for(uint8_t i = 0, j = 0; i < HOST_NAME_MAX_LEN+1; i++, j = (j+1)%CHECKSUM_LEN){
+		res ^= ((uint32_t)(hostName[i])<<(8*j));
+		if(hostName[i] == '\0'){
 			break;
 		}
 	}

@@ -21,8 +21,9 @@ AsyncWebServer server(80);
 const char* CURRENT_PASSWORD_INPUT = "input_current_password";
 const char* SSID_INPUT = "input_ssid";
 const char* PASSWORD_INPUT = "input_password";
+const char* HOST_NAME_INPUT = "input_host_name";
 
-extern String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword);
+extern String changeWifi(const char* currentPassword, const char* newSSID, const char* newPassword, const char* newHostName);
 
 // HTML web page to handle 3 input fields (input1, input2, input3)
 const char index_html[] PROGMEM = R"rawliteral(
@@ -52,6 +53,10 @@ const char index_html[] PROGMEM = R"rawliteral(
 			<label for="input_password">New password: &nbsp </label>
 			<input name="input_password" type="text">
 		</p>
+		<p>
+			<label for="input_host_name">New host name: &nbsp </label>
+			<input name="input_host_name" type="text">
+		</p>
 		<br>
 		<p>
 			<input type="submit" value="Set">
@@ -77,6 +82,7 @@ void webserver_init(){
 		String current_password;
 		String new_ssid;
 		String new_password;
+		String new_host_name;
 		// GET currentPassowrd value on <ESP_IP>/get?input_current_password=<inputMessage>
 		if (request->hasParam(CURRENT_PASSWORD_INPUT)) {
 			current_password = request->getParam(CURRENT_PASSWORD_INPUT)->value();
@@ -89,8 +95,13 @@ void webserver_init(){
 		if (request->hasParam(PASSWORD_INPUT)) {
 			new_password = request->getParam(PASSWORD_INPUT)->value();
 		}
+		// GET new host name value on <ESP_IP>/get?input_host_name=<inputMessage>
+		if (request->hasParam(HOST_NAME_INPUT)) {
+			new_host_name = request->getParam(HOST_NAME_INPUT)->value();
+		}
 		String reply = changeWifi((current_password != NULL?current_password.c_str():""),
-				(new_ssid != NULL?new_ssid.c_str():""), (new_password != NULL?new_password.c_str():""));
+				(new_ssid != NULL?new_ssid.c_str():""), (new_password != NULL?new_password.c_str():""),
+				(new_host_name != NULL?new_host_name.c_str():""));
 		request->send(200, "text/html", reply +
 				"<br><a href=\"/\">Return</a>");
 	});

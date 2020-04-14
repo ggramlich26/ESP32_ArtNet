@@ -65,11 +65,12 @@ uint32_t calculateWIFIChecksum();
 //			UNI_1 - UNI_6: ArtNet Universe																	//
 //		Stand-alone mode:																					//
 //			UNI_6:	0: Local only; 1: Master																//
-//			ADDR_1 - ADDR_3: Red color																		//
-//			ADDR_4 - ADDR_6: Green color																	//
-//			ADDR_7 - ADDR_9: Blue color																		//
+//			ADDR_1 - ADDR_3: Red color or intensity															//
+//			ADDR_4 - ADDR_6: Green color or segment width													//
+//			ADDR_7 - ADDR_9: Blue color	or speed															//
 //			UNI_1 - UNI_5: Effect																			//
 //				00000: Steady color																			//
+//				000xx:	Rainbow																				//
 //				100xx:	Blurr forward																		//
 //				010xx:	Blurr forward backward																//
 //				110xx:	Tear forward 																		//
@@ -118,13 +119,9 @@ void setup()
 	initSwitches();
 #endif
 
-	uint8_t ssid_initialized = 0;
 	//read SSID and password from flash
 	for(uint8_t i = 0; i < SSID_MAX_LEN+1; i++){
 		ssid[i] = EEPROM.read(SSID_ADDR+i);
-		if(ssid[i] != 0x00){
-			ssid_initialized = 0xFF;
-		}
 	}
 	for(uint8_t i = 0; i < WIFI_PW_MAX_LEN+1; i++){
 		password[i] = EEPROM.read(WIFI_PW_ADDR+i);
@@ -431,8 +428,62 @@ void updateEffectMode(){
 			b |= 0x1F;
 		efg_color_set_steady(r, g, b);
 		//steady
-		if(effect == 0x00){
+		if(effect == 0x00000){
 			efg_set_steady();
+		}
+		//rainbow
+		else if((effect&0x07) == 0b000){
+			switch(effect>>3){
+			case 0:
+				//steady
+				efg_set_steady();
+				break;
+			case 1:
+				//still free -> set to steady
+				efg_set_steady();
+				break;
+			case 2:
+			{
+				efg_set_steady();
+				uint16_t upd_int = 0;
+				b = (getEffectMode()>>6) & 0x07;
+				if(b){
+					switch (b){
+					case 1:
+						upd_int=3000;
+						break;
+					case 2:
+						upd_int=1000;
+						break;
+					default:
+						upd_int=404-52*b;
+					}
+				}
+				efg_color_set_rainbow_chase(c_rainbow_chase_f, upd_int, r, g/2);
+				break;
+			}
+			case 3:
+			{
+				uint16_t upd_int = 0;
+				b = (getEffectMode()>>6) & 0x07;
+				if(b){
+					switch (b){
+					case 1:
+						upd_int=3000;
+						break;
+					case 2:
+						upd_int=1000;
+						break;
+					default:
+						upd_int=404-52*b;
+					}
+				}
+				efg_set_blurr(m_chase_blurr_f, 5, 30, upd_int, 5);
+				efg_color_set_rainbow_chase(c_rainbow_chase_f, upd_int, r, g/2);
+				break;
+			}
+			}
+
 		}
 		//Blurr forward
 		else if((effect&0x07) == 0b001){
@@ -441,7 +492,7 @@ void updateEffectMode(){
 				efg_set_blurr(m_chase_blurr_f, 1, 20, 100, 2);
 				break;
 			case 1:
-				efg_set_blurr(m_chase_blurr_f, 1, 20, 400, 2);
+				efg_set_blurr(m_chase_blurr_f, 3, 20, 400, 5);
 				break;
 			case 2:
 				efg_set_blurr(m_chase_blurr_f, 1, 105, 100, 2);
@@ -512,16 +563,16 @@ void updateEffectMode(){
 
 			switch(effect>>3){
 			case 0:
-				efg_color_set_fade_switch(c_fade_all, 100, 255);
+				efg_color_set_fade_switch(c_fade_all, 100, r);
 				break;
 			case 1:
-				efg_color_set_fade_switch(c_fade_all, 400, 255);
+				efg_color_set_fade_switch(c_fade_all, 400, r);
 				break;
 			case 2:
-				efg_color_set_fade_switch(c_switch_all, 100, 255);
+				efg_color_set_fade_switch(c_switch_all, 100, r);
 				break;
 			case 3:
-				efg_color_set_fade_switch(c_switch_all, 400, 255);
+				efg_color_set_fade_switch(c_switch_all, 400, r);
 				break;
 			}
 		}
@@ -529,17 +580,33 @@ void updateEffectMode(){
 		else if((effect&0x07) == 0b110){
 			switch(effect>>3){
 			case 0:
-				efg_set_stars(10, 50);
-				break;
-			case 1:
 				efg_set_stars(50, 100);
 				break;
-			case 2:
-				efg_set_snow(10,50);
+			case 1:
+				efg_set_stars(10,50);
 				break;
+			case 2:{
+				efg_set_stars(10,50);
+				uint16_t upd_int = 0;
+				b = (getEffectMode()>>6) & 0x07;
+				if(b){
+					switch (b){
+					case 1:
+						upd_int=3000;
+						break;
+					case 2:
+						upd_int=1000;
+						break;
+					default:
+						upd_int=404-52*b;
+					}
+				}
+				efg_color_set_rainbow_chase(c_rainbow_chase_f, upd_int, r, g/2);
+				break;
+			}
 			case 3:
-				efg_set_snow(10,50);
-				efg_color_set_snow_rainbow(255, 100);
+				efg_set_snow(10,40);
+				efg_color_set_snow_rainbow(r, g/2);
 				break;
 			}
 		}

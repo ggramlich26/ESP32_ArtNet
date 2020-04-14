@@ -50,7 +50,7 @@ void efg_init(){
 	r_value = 0;
 	g_value = 0;
 	b_value = 0;
-	val_value = 255;
+	val_value = 30;
 	c_update_interval = 100;
 	c_segment_width = 100;
 	segment_1 = 12;

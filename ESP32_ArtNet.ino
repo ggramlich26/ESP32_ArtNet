@@ -35,8 +35,10 @@ void initWifi();
 void initTest();
 uint32_t calculateWIFIChecksum();
 
+#ifndef ON_LIGHT_TUBE_PCB
 #define ADDR_SWITCH		0b10000000
 #define UNIVERSE_SWITCH	0b01000000
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //																											//
@@ -112,7 +114,9 @@ void setup()
 
 	Serial.begin(115200);
 
+#ifdef ON_LIGHT_TUBE_PCB
 	initSwitches();
+#endif
 
 	uint8_t ssid_initialized = 0;
 	//read SSID and password from flash
@@ -183,7 +187,9 @@ void loop()
 	if((!(getEffectMode() >> 15 || (getEffectMode()>>14) == 0x03)) && !wifi_initialized){
 		initWifi();
 	}
-	updateEffectMode();
+	if(getEffectMode() >> 15){
+		updateEffectMode();
+	}
 
 	if(!(getEffectMode()>>15)){	//ArtNet mode
 		artnet.read();
@@ -322,7 +328,23 @@ void initTestBlue()
 
 //Sets the switch pins to input and enables the internal pullup resistors
 void initSwitches(){
-	//Todo: implement
+	pinMode(5, INPUT_PULLUP);
+	pinMode(18, INPUT_PULLUP);
+	pinMode(19, INPUT_PULLUP);
+	pinMode(21, INPUT_PULLUP);
+	pinMode(22, INPUT_PULLUP);
+	pinMode(23, INPUT_PULLUP);
+	pinMode(13, INPUT_PULLUP);
+	pinMode(12, INPUT_PULLUP);
+
+	pinMode(14, INPUT_PULLUP);
+	pinMode(27, INPUT_PULLUP);
+	pinMode(26, INPUT_PULLUP);
+	pinMode(25, INPUT_PULLUP);
+	pinMode(33, INPUT_PULLUP);
+	pinMode(32, INPUT_PULLUP);
+	pinMode(35, INPUT_PULLUP);
+	pinMode(34, INPUT_PULLUP);
 }
 
 //returns DMX Address. This is the value from the address DIP switches in inversed order
@@ -346,7 +368,46 @@ uint8_t invert_bitorder(uint8_t b){
 	return b;
 }
 uint16_t getEffectMode(){
+#ifdef ON_LIGHT_TUBE_PCB
+	uint16_t res = 0;
+	if(!digitalRead(23))
+		res |= (1<<0);
+	if(!digitalRead(22))
+		res |= (1<<1);
+	if(!digitalRead(21))
+		res |= (1<<2);
+	if(!digitalRead(19))
+		res |= (1<<3);
+	if(!digitalRead(18))
+		res |= (1<<4);
+	if(!digitalRead(5))
+		res |= (1<<5);
+	if(!digitalRead(34))
+		res |= (1<<6);
+	if(!digitalRead(35))
+		res |= (1<<7);
+
+	if(!digitalRead(32))
+		res |= (1<<8);
+	if(!digitalRead(33))
+		res |= (1<<9);
+	if(!digitalRead(25))
+		res |= (1<<10);
+	if(!digitalRead(26))
+		res |= (1<<11);
+	if(!digitalRead(27))
+		res |= (1<<12);
+	if(!digitalRead(14))
+		res |= (1<<13);
+	if(!digitalRead(12))
+		res |= (1<<14);
+	if(!digitalRead(13))
+		res |= (1<<15);
+
+	return res;
+#else
 	return invert_bitorder(ADDR_SWITCH) | (invert_bitorder(UNIVERSE_SWITCH) << 8);
+#endif
 }
 
 void updateEffectMode(){
